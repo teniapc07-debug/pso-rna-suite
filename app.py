@@ -5,6 +5,7 @@ import PySimpleGUI as sg
 from estado import estado, OutputGUI
 from ui.ui_pso import layout_pso
 from ui.ui_rna import layout_rna
+from ui.ui_resultados import layout_resultados
 from logica import pso_runner, rna_runner
 
 
@@ -12,14 +13,17 @@ sg.theme('DarkGrey5')
 
 
 def _build_window():
-    tab_pso = sg.Tab('Optimizador PSO',
-                     layout_pso(estado.nv, estado.defaults),
-                     key='pso-TAB-', expand_x=True, expand_y=True)
     tab_rna = sg.Tab('Constructor RNA',
                      layout_rna(),
                      key='rna-TAB-', expand_x=True, expand_y=True)
+    tab_pso = sg.Tab('Optimizador PSO',
+                     layout_pso(estado.nv, estado.defaults),
+                     key='pso-TAB-', expand_x=True, expand_y=True)
+    tab_res = sg.Tab('Resultados',
+                     layout_resultados(),
+                     key='res-TAB-', expand_x=True, expand_y=True)
 
-    tabs = sg.TabGroup([[tab_pso, tab_rna]],
+    tabs = sg.TabGroup([[tab_pso, tab_rna, tab_res]],
                        key='-TABS-', enable_events=True,
                        expand_x=True, expand_y=True)
 
@@ -32,8 +36,8 @@ def _build_window():
 def main():
     window = _build_window()
 
-    sys.stdout = OutputGUI(window, 'pso-OUTPUT-', sys.__stdout__)
-    sys.stderr = OutputGUI(window, 'pso-OUTPUT-', sys.__stderr__)
+    sys.stdout = OutputGUI(window, 'res-OUTPUT-', sys.__stdout__)
+    sys.stderr = OutputGUI(window, 'res-OUTPUT-', sys.__stderr__)
 
     while True:
         event, values = window.read()
@@ -54,8 +58,17 @@ def main():
         if resultado == 'REBUILD':
             window.close()
             window = _build_window()
-            sys.stdout = OutputGUI(window, 'pso-OUTPUT-', sys.__stdout__)
-            sys.stderr = OutputGUI(window, 'pso-OUTPUT-', sys.__stderr__)
+            sys.stdout = OutputGUI(window, 'res-OUTPUT-', sys.__stdout__)
+            sys.stderr = OutputGUI(window, 'res-OUTPUT-', sys.__stderr__)
+            pso_runner.redibujar_resultados(window)
+
+        if event == 'res-LIMPIAR-':
+            window['res-OUTPUT-'].update('')
+            continue
+
+        if event == 'res-GUARDAR_PNG-':
+            pso_runner.guardar_grafica_png(window)
+            continue
 
     window.close()
 

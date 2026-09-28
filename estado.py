@@ -67,5 +67,8 @@ class Estado:
         self.rna_lim_sup_global = None
         self.rna_columnas_x_global = None
 
+        # --- Resultados (figura persistente) ---
+        self.ultima_figura = None
+        self.ultimo_dtframe = None
 
 estado = Estado()
