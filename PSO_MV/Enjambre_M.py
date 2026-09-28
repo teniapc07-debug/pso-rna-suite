@@ -71,7 +71,7 @@ class enjambre:
                 info=info,
             )
 
-    def optimizar(self,funcion_objetivo, optimizacion, n_iteraciones, w=0.9, c1=1.5, c2=1.5, info=False,w_i=0.9,w_f=0.4,reduccion_w=True, rondas_parada=10, parada_temprana=False, tolerancia=1e-6, carpeta_salida="resultados_pso",):
+    def optimizar(self,funcion_objetivo, optimizacion, n_iteraciones, w=0.9, c1=1.5, c2=1.5, info=False,w_i=0.9,w_f=0.4,reduccion_w=True, rondas_parada=10, parada_temprana=False, tolerancia=1e-6, carpeta_salida="resultados_pso", iteracion_callback=None):
         inicio = tm.time()
         for i in range(n_iteraciones):
             if info:
@@ -84,6 +84,12 @@ class enjambre:
             )
             self.hist_mej_valor.append(copy.deepcopy(self.mej_valor))
             self.hist_mejor_posicion.append(copy.deepcopy(self.mej_posicion))
+
+            if iteracion_callback is not None:
+                try:
+                    iteracion_callback(i + 1, n_iteraciones, self.mej_valor)
+                except Exception:
+                    pass
 
             #-------------------------------------------------------------------------------------------
             if i == 0:
