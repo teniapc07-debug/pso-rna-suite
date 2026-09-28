@@ -21,11 +21,12 @@ ENV/
 .ipynb_checkpoints/
 
 # ---------- Salidas del proyecto ----------
-carpeta_export/
+exportaciones/
 resultados_pso/
 Historial_Enjambre.csv
 *.keras
 *.save
+**/config.json
 
 # ---------- Sistema operativo ----------
 .DS_Store

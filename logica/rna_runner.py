@@ -234,11 +234,14 @@ def _exportar_modelo(values):
         nv_exp = estado.rna_nv
         cols = estado.rna_columnas_x_global or [f'x{i+1}' for i in range(nv_exp)]
 
-    carpeta = sg.popup_get_folder('Carpeta de exportación del modelo')
-    if not carpeta:
+    carpeta_elegida = sg.popup_get_folder('Carpeta de exportación del modelo')
+    if not carpeta_elegida:
         return
     try:
-        c = Path(carpeta); c.mkdir(parents=True, exist_ok=True)
+        base = Path('exportaciones')
+        base.mkdir(parents=True, exist_ok=True)
+        c = base / Path(carpeta_elegida).name
+        c.mkdir(parents=True, exist_ok=True)   
         estado.rna_modelo.save(c / 'modelo.keras')
         jb.dump(estado.rna_escalador_x, c / 'scaler_x.save')
         jb.dump(estado.rna_escalador_y, c / 'scaler_y.save')
