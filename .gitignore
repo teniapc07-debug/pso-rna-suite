@@ -1,0 +1,33 @@
+# ---------- Python ----------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.venv/
+venv/
+env/
+ENV/
+
+# ---------- Entornos de IDE ----------
+.vscode/
+.idea/
+*.swp
+
+# ---------- Jupyter / notebooks ----------
+.ipynb_checkpoints/
+
+# ---------- Salidas del proyecto ----------
+carpeta_export/
+resultados_pso/
+Historial_Enjambre.csv
+*.keras
+*.save
+
+# ---------- Sistema operativo ----------
+.DS_Store
+Thumbs.db
+desktop.ini
