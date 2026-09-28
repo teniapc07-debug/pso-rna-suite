@@ -13,38 +13,43 @@ def layout_pso(nv, defaults=None):
         key='pso-OPT-',
     )
 
-    # --- Selector de modo ---
-    modos = [
-        [sp.Text('Origen de datos')],
-        [
-            sp.Radio('Básico', 'MODO-DATOS-PSO',
-                     default=defaults.get('pso-MODO_BASICO-', True),
-                     key='pso-MODO_BASICO-', enable_events=True),
-            sp.Radio('Importar RNA', 'MODO-DATOS-PSO',
-                     default=defaults.get('pso-MODO_IMPORTADO-', False),
-                     key='pso-MODO_IMPORTADO-', enable_events=True),
-        ],
-    ]
-
-    # --- Sección 0: Importación de RNA (AHORA CON CONTENIDO) ---
+    # ------------------------------------------------------------------
+    # Sección 0: Importación de RNA (opcional, siempre visible)
+    # ------------------------------------------------------------------
     importacion = [
+        [sp.Text(
+            'Opcional. Si carga un modelo RNA, se ignorará la función simbólica '
+            'definida en Controles.',
+            font=("Arial", 10, "italic"), text_color='#B0B0B0',
+            expand_x=True)],
         [sp.Text('Carpeta con modelo RNA exportado:', font=("Arial", 12))],
         [sp.Input(key='pso-RUTA_RNA-', size=(40, 1), font=("Arial", 12)),
          sp.FolderBrowse('Examinar', size=(10, 1))],
         [sp.Button('Cargar modelo RNA', key='pso-CARGAR_RNA-', size=(20, 1)),
          sp.Button('Quitar modelo',    key='pso-QUITAR_RNA-',  size=(15, 1))],
-        [sp.Multiline(size=(60, 5), key='pso-INFO_RNA-', disabled=True,
-                      autoscroll=True, font=("Arial", 10),
-                      expand_x=True, expand_y=True)],
+        [sp.Column(
+            [[sp.Button('Editar config PSO del modelo',
+                        key='pso-EDITAR_CONFIG-', size=(28, 1))]],
+            key='pso-PIN_EDITAR-', visible=False, pad=(0, 0),
+        )],
+        [sp.Multiline(
+            size=(60, 3), key='pso-INFO_RNA-', disabled=True,
+            autoscroll=True, font=("Arial", 10),
+            expand_x=True,
+            # Mensaje inicial — se actualiza al cargar/quitar el modelo
+            default_text='No hay modelo RNA cargado. Se usará la función simbólica.',
+        )],
     ]
     frame_0 = sp.Frame(
-        'Importación de RNA', importacion, key='pso-FRAME-0-',
-        visible=defaults.get('pso-MODO_IMPORTADO-', False),
+        'Importación de RNA (opcional)', importacion,
+        key='pso-FRAME-0-', visible=True,
         font=("Arial", 12, "bold"),
-        size=(600, 200), expand_x=True, expand_y=True,
+        expand_x=True,
     )
 
-    # --- Sección 1: Controles (sin la fila de botones) ---
+    # ------------------------------------------------------------------
+    # Sección 1: Controles (siempre visible)
+    # ------------------------------------------------------------------
     controles = [
         [sp.Text("Nº Partículas", font=("Arial", 16), size=(13, 1)),
          sp.Input(key='pso-NP-', size=(10, 1), font=("Arial", 16),
@@ -73,13 +78,15 @@ def layout_pso(nv, defaults=None):
                      key='pso-HIST-', size=(15))],
     ]
     frame_1 = sp.Frame(
-        'Controles', controles, key='pso-FRAME-1-',
-        visible=defaults.get('pso-MODO_BASICO-', True),
+        'Controles', controles,
+        key='pso-FRAME-1-', visible=True,
         font=("Arial", 12, "bold"),
-        size=(600, 225), expand_x=True, expand_y=True,
+        expand_x=True,
     )
 
-    # --- Fila de botones de acción (compartida) ---
+    # ------------------------------------------------------------------
+    # Botones de acción
+    # ------------------------------------------------------------------
     botones_accion = [
         sp.Button('Iniciar PSO',         size=(12, 1), key='pso-INI-'),
         sp.Button('Importar Datos',      size=(12, 1), key='pso-IMPORTAR-'),
@@ -87,7 +94,28 @@ def layout_pso(nv, defaults=None):
         sp.Button('Limpiar Datos',       size=(12, 1), key='pso-LIMPIAR-'),
     ]
 
-    # --- Sección 2: Límites de variables ---
+    # ------------------------------------------------------------------
+    # Panel de progreso (NUEVO)
+    # ------------------------------------------------------------------
+    progreso_layout = [
+        [sp.Text('Estado:', size=(9, 1), font=("Arial", 11, "bold")),
+         sp.Text('En espera...', key='pso-ESTADO-',
+                 font=("Arial", 11), expand_x=True)],
+        [sp.ProgressBar(1, orientation='h', size=(40, 18),
+                        key='pso-PROGRESO-', expand_x=True,
+                        bar_color=('#3B82F6', '#1F2937')),
+         sp.Text('0%', key='pso-PORCENTAJE-', size=(6, 1),
+                 font=("Arial", 11), justification='right')],
+    ]
+    frame_prog = sp.Frame(
+        'Progreso del PSO', progreso_layout,
+        font=("Arial", 12, "bold"),
+        expand_x=True,
+    )
+
+    # ------------------------------------------------------------------
+    # Sección 2: Límites de variables (columna derecha)
+    # ------------------------------------------------------------------
     limites_layout = []
     if nv > 0:
         limites_layout.append([sp.Text("Límites de las variables",
@@ -109,36 +137,20 @@ def layout_pso(nv, defaults=None):
                             size=(600, 500), key='pso-LIMITES-', visible=True)
     frame_2 = sp.Frame('Límites de las variables', [[col_limites]],
                        font=("Arial", 12, "bold"),
-                       size=(400, 275), expand_x=True, expand_y=True)
+                       size=(400, 500), expand_x=True, expand_y=True)
 
-    # --- Sección 3: Canvas de la gráfica ---
-    grafica = [[sp.Canvas(key='pso-CANVAS-', background_color='white',
-                          expand_x=True, expand_y=True)]]
-    frame_3 = sp.Frame('Evolución del Enjambre', grafica,
-                       font=("Arial", 12, "bold"),
-                       size=(800, 275), expand_x=True, expand_y=True)
-
-    # --- Sección 4: Salida de texto ---
-    salida = [[sp.Multiline(size=(60, 6), font=("Arial", 12),
-                            key='pso-OUTPUT-', autoscroll=True,
-                            disabled=True, expand_x=True, expand_y=True)]]
-    frame_4 = sp.Frame('Salida de ejecución', salida,
-                       font=("Arial", 12, "bold"),
-                       size=(600, 225), expand_x=True, expand_y=True)
-
-    # --- Composición ---
+    # ------------------------------------------------------------------
+    # Composición
+    # ------------------------------------------------------------------
     col_izq = sp.Column([
-        [sp.Frame('Origen de Datos', modos, font=("Arial", 12, "bold"),
-                  expand_x=True)],
-        [sp.pin(frame_0)],
-        [sp.pin(frame_1)],
+        [frame_0],
+        [frame_1],
         [sp.Column([botones_accion], expand_x=True)],
-        [frame_4],
+        [frame_prog],
     ], vertical_alignment='top', expand_x=True, expand_y=True)
 
     col_der = sp.Column([
         [frame_2],
-        [frame_3],
     ], vertical_alignment='top', expand_x=True, expand_y=True)
 
     botones_inferiores = [
