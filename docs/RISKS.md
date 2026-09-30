@@ -430,7 +430,7 @@ Vista condensada de los 19 riesgos. La columna **Estado** indica:
 | R-13 | De uso | Media | Bajo | Mitigado |
 | R-14 | De uso | Media | Bajo | Parcial |
 | R-15 | De uso | Media | Medio | Sin mitigar |
-| R-16 | Mantenimiento | Alta | Medio-alto | Sin mitigar |
+| R-16 | Mantenimiento | Alta | Medio-alto | Parcial |
 | R-17 | Mantenimiento | Alta | Medio | Sin mitigar |
 | R-18 | Mantenimiento | Media | Medio | Parcial |
 | R-19 | Mantenimiento | Media | Bajo | Parcial |
@@ -466,7 +466,9 @@ Los riesgos se ordenan por **coste de no mitigarlos** en el contexto actual
 
 | Prioridad | Riesgo | Mitigación prevista | Punto del roadmap |
 |---|---|---|---|
-| 1 | R-16 | Tests con `pytest` | Punto 7 |
+**Mitigación actual**: suite de 39 tests con `pytest` cubriendo
+`funcion_objetivo.py`, `Particula_M.py` y `Enjambre_M.py`. Ejecutable con
+`pytest` (o `pytest -m "not slow"` para excluir los tests del enjambre).
 | 2 | R-17 | Logging estructurado | Punto 8 |
 | 3 | R-01 | Migrar a `FreeSimpleGUI` (rama dedicada) | Antes de distribución pública |
 | 4 | R-04 | Verificación de Tk al arrancar + docs de requisitos | Con el empaquetado `.exe` |
@@ -495,6 +497,8 @@ Reglas para mantener `RISKS.md` útil a lo largo del tiempo:
 4. **Retirar riesgos obsoletos**: si un riesgo deja de aplicar (por
    ejemplo, porque se abandona la dependencia que lo causaba), eliminar la
    entrada y dejar constancia en el commit.
+   - **2026-09-29**: R-16 pasa a mitigación parcial con la incorporación de
+  tests automáticos (`feature/tests-pytest`).
 
 Sin estas reglas, el documento envejece y pasa a ser una foto del pasado
 en lugar de una guía viva.
