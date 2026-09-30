@@ -32,3 +32,13 @@ pip install PySimpleGUI tensorflow scikit-learn joblib matplotlib pandas numpy
 | [docs/WORKFLOWS.md](docs/WORKFLOWS.md) | Flujos operativos paso a paso |
 | [docs/CONSTRAINTS.md](docs/CONSTRAINTS.md) | Reglas, dominios, invariantes |
 | [docs/RISKS.md](docs/RISKS.md) | Riesgos, matriz y plan de mitigación |
+
+## Tests
+
+La suite incluye 39 pruebas automáticas con `pytest` que cubren el parser
+de funciones objetivo, la clase `partícula` y el motor del enjambre.
+
+### Instalación de dependencias de desarrollo
+
+```bash
+pip install -r requirements-dev.txt
