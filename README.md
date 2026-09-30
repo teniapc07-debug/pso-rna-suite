@@ -22,3 +22,13 @@ y usarla inmediatamente como función objetivo del PSO** sin reiniciar la app.
 
 ```bash
 pip install PySimpleGUI tensorflow scikit-learn joblib matplotlib pandas numpy
+
+## Documentación
+
+| Documento | Contenido |
+|---|---|
+| [README.md](README.md) | Instalación, uso básico, dependencias |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Estructura estática del proyecto |
+| [docs/WORKFLOWS.md](docs/WORKFLOWS.md) | Flujos operativos paso a paso |
+| [docs/CONSTRAINTS.md](docs/CONSTRAINTS.md) | Reglas, dominios, invariantes |
+| [docs/RISKS.md](docs/RISKS.md) | Riesgos, matriz y plan de mitigación |
