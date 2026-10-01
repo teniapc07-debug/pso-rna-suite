@@ -1,0 +1,14 @@
+{
+  "nivel_archivo": "DEBUG",
+  "nivel_gui": "INFO",
+  "formato": "%(asctime)s %(levelname)-5s [%(name)s] %(message)s",
+  "formato_fecha": "%Y-%m-%d %H:%M:%S",
+  "silenciar": [
+    "matplotlib",
+    "matplotlib.font_manager",
+    "tensorflow",
+    "absl",
+    "PIL",
+    "urllib3"
+  ]
+}
