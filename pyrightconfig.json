@@ -1,0 +1,24 @@
+{
+  "include": [
+    "app.py",
+    "estado.py",
+    "ui",
+    "logica",
+    "PSO_MV",
+    "RNA"
+  ],
+  "exclude": [
+    "**/__pycache__",
+    "**/node_modules",
+    "resultados_pso",
+    "exportaciones",
+    "tests"
+  ],
+  "typeCheckingMode": "basic",
+  "reportMissingImports": "none",
+  "reportMissingModuleSource": "none",
+  "reportOptionalMemberAccess": "none",
+  "reportOptionalOperand": "none",
+  "reportAttributeAccessIssue": "none",
+  "reportArgumentType": "none"
+}
