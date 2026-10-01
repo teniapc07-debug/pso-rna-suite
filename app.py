@@ -19,6 +19,7 @@ def _build_window():
     tab_rna = sg.Tab('Constructor RNA',
                      layout_rna(),
                      key='rna-TAB-', expand_x=True, expand_y=True)
+    
     tab_pso = sg.Tab(
         'Optimizador PSO',
         layout_pso(
@@ -27,8 +28,9 @@ def _build_window():
         ),
         key='pso-TAB-', expand_x=True, expand_y=True,
     )
+
     tab_res = sg.Tab('Resultados',
-                     layout_resultados(),
+                     layout_resultados(estado.historial_visible),
                      key='res-TAB-', expand_x=True, expand_y=True)
 
     tabs = sg.TabGroup([[tab_pso, tab_rna, tab_res]],
@@ -64,6 +66,8 @@ def main():
             resultado = pso_runner.handle(event, values, window)
         elif isinstance(event, str) and event.startswith('rna-'):
             resultado = rna_runner.handle(event, values, window)
+        elif isinstance(event, str) and event.startswith('res-'):
+            resultado = pso_runner.handle(event, values, window) 
 
         if resultado == 'REBUILD':
             window.close()
@@ -72,14 +76,8 @@ def main():
             sys.stderr = OutputGUI(window, 'res-OUTPUT-', sys.__stderr__)
             configurar_logging(window, 'res-OUTPUT-')
             pso_runner.redibujar_resultados(window)
-
-        if event == 'res-LIMPIAR-':
-            window['res-OUTPUT-'].update('')
-            continue
-
-        if event == 'res-GUARDAR_PNG-':
-            pso_runner.guardar_grafica_png(window)
-            continue
+            if estado.historial_visible:
+                pso_runner.refrescar_tabla_historial(window)
 
     window.close()
 

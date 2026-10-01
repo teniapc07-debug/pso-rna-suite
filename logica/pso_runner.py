@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import logging
 from logica.logging_config import operacion_log
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from logica import historial
 
 from PSO_MV import Enjambre_M
 from PSO_MV import funcion_objetivo as modulo_funcion_objetivo
@@ -79,6 +80,32 @@ def _guardar_defaults(values):
 
 
 def handle(event, values, window):
+    if event == 'res-HIST-TOGGLE-':
+        toggle_historial(window)
+        return None
+
+    if event == 'res-HIST-LIMPIAR-':
+        limpiar_historial_ui(window)
+        return None
+    
+    if event == 'res-LIMPIAR-':
+        window['res-OUTPUT-'].update('')
+        return None
+
+    if event == 'res-GUARDAR_PNG-':
+        guardar_grafica_png(window)
+        return None
+
+    if event == 'res-HIST-EXPORTAR-':
+        exportar_historial_csv()
+        return None
+
+    if event == 'res-HISTORIAL-':
+        seleccion = values.get('res-HISTORIAL-', [])
+        if seleccion:
+            return restaurar_desde_historial(window, seleccion[0])
+        return None
+
     if event == 'pso-EDITAR_CONFIG-':
         return _dialogo_editar_config()
 
@@ -358,7 +385,6 @@ def _exportar_csv_params(values):
         logger.error(f"Error al exportar CSV: {exc}")
         sp.popup_error(f'Error al exportar:\n{exc}')
 
-
 def _limpiar():
     estado.nv = 0
     estado.funcion_objetivo_rna = None
@@ -372,7 +398,6 @@ def _limpiar():
         'pso-C1-': '1.5', 'pso-C2-': '1.5', 'pso-RED_W-': True,
         'pso-RONDAS-': '10', 'pso-TOL-': '1e-6',
     }
-
 
 def _ejecutar_pso(values, window):
     try:
@@ -472,10 +497,37 @@ def _ejecutar_pso(values, window):
         except Exception:
             pass
 
+                # --- Registrar en el historial ---
+        try:
+            origen = (Path(estado.ruta_rna).name
+                      if estado.ruta_rna
+                      else (values['pso-FUNCION-'].strip() or '—'))
+            entrada = {
+                'origen': origen,
+                'nv': nv_local,
+                'np': n_particulas,
+                'ni': n_iteraciones,
+                'opt': optimizacion,
+                'w_i': w_i, 'w_f': w_f, 'c1': c1, 'c2': c2,
+                'reduccion_w': reduccion_w,
+                'parada_temprana': parada_temprana,
+                'mejor_valor': float(enj.valor_optimo),
+                'mejor_posicion': [
+                    float(x) for x in np.asarray(enj.posicion_optima).ravel()
+                ],
+                'iteracion_optimo': int(enj.iteracion_optimo),
+                'tiempo_seg': float(getattr(enj, 'tiempo_total', 0.0)),
+            }
+            entrada_guardada = historial.agregar_entrada(entrada)
+            logger.info(f"Historial: entrada id={entrada_guardada['id']} "
+                        f"({origen}, mejor={entrada['mejor_valor']:.6g})")
+            if estado.historial_visible:
+                refrescar_tabla_historial(window)
+        except Exception as exc:
+            logger.error(f"No se pudo registrar la ejecución: {exc}")
+
         if values['pso-HIST-']:
             actualizar_grafica(window, enj.dtframe)
-
-
 
 def guardar_grafica_png(window):
     """Guarda la última figura en resultados_pso/grafica_enjambre.png."""
@@ -492,7 +544,6 @@ def guardar_grafica_png(window):
     except Exception as exc:
         sp.popup_error(f'No se pudo guardar la gráfica:\n{exc}')
 
-
 def redibujar_resultados(window):
     """Tras reconstruir la ventana, vuelve a incrustar la figura si existía."""
     if estado.ultima_figura is not None:
@@ -500,7 +551,6 @@ def redibujar_resultados(window):
             _embed_figure(window, estado.ultima_figura)
         except Exception:
             pass
-
 
 def _dialogo_editar_config():
     """Abre un diálogo para editar el bloque `pso` del config.json del modelo RNA cargado."""
@@ -645,4 +695,125 @@ def _dialogo_editar_config():
 
     # Reconstruir la ventana para que el formulario refleje los nuevos valores
     logger.info(f"Config editado: {nuevo}")
+    return 'REBUILD'
+
+# ---------------------------------------------------------------
+# Historial
+# ---------------------------------------------------------------
+def _formato_tiempo(seg):
+    if seg < 60:
+        return f"{seg:.2f}s"
+    m = int(seg // 60)
+    s = seg % 60
+    return f"{m}m {s:.0f}s"
+
+
+def refrescar_tabla_historial(window):
+    """Vuelca las últimas 20 entradas (más recientes primero) en la tabla."""
+    entradas = historial.cargar_historial()
+    ultimas = list(reversed(entradas[-20:]))
+    filas = []
+    for e in ultimas:
+        origen = str(e.get('origen', '—'))
+        if len(origen) > 25:
+            origen = origen[:22] + '...'
+        filas.append([
+            e.get('id', '?'),
+            origen,
+            e.get('np', '?'),
+            e.get('ni', '?'),
+            f"{e.get('mejor_valor', 0):.6g}",
+            _formato_tiempo(float(e.get('tiempo_seg', 0.0))),
+            str(e.get('timestamp', '')).replace('T', ' ')[:19],
+        ])
+    window['res-HISTORIAL-'].update(values=filas)
+
+
+def toggle_historial(window):
+    """Alterna la visibilidad del panel y refresca la tabla al mostrarlo."""
+    estado.historial_visible = not estado.historial_visible
+    window['res-HIST-CONT-'].update(visible=estado.historial_visible)
+    if estado.historial_visible:
+        refrescar_tabla_historial(window)
+
+
+def limpiar_historial_ui(window):
+    """Vacía el historial tras confirmación del usuario."""
+    if not sp.popup_yes_no('¿Vaciar todo el historial de ejecuciones?'):
+        return
+    historial.limpiar_historial()
+    window['res-HISTORIAL-'].update(values=[])
+    sp.popup_ok('Historial vaciado.')
+
+
+def exportar_historial_csv():
+    """Exporta el historial completo a un CSV elegido por el usuario."""
+    entradas = historial.cargar_historial()
+    if not entradas:
+        sp.popup_error('No hay historial para exportar.')
+        return
+    archivo = sp.popup_get_file(
+        'Guardar historial como CSV',
+        save_as=True,
+        file_types=(("CSV", "*.csv"),),
+        no_window=True, default_extension='.csv',
+    )
+    if not archivo:
+        return
+    destino = Path(archivo)
+    try:
+        with open(destino, 'w', encoding='utf-8') as f:
+            f.write('id,timestamp,origen,np,ni,opt,mejor_valor,'
+                    'iteracion_optimo,tiempo_seg\n')
+            for e in entradas:
+                f.write(
+                    f"{e.get('id','')},{e.get('timestamp','')},"
+                    f"{e.get('origen','')},{e.get('np','')},{e.get('ni','')},"
+                    f"{e.get('opt','')},{e.get('mejor_valor','')},"
+                    f"{e.get('iteracion_optimo','')},{e.get('tiempo_seg','')}\n"
+                )
+        logger.info(f"Historial exportado a {destino}")
+        sp.popup_ok(f'Historial exportado a:\n{destino}')
+    except Exception as exc:
+        logger.error(f"Error al exportar historial: {exc}")
+        sp.popup_error(f'Error al exportar:\n{exc}')
+
+
+def restaurar_desde_historial(window, idx_fila):
+    """Restaura los parámetros de la fila seleccionada en el tab PSO.
+
+    ``idx_fila`` es el índice sobre las filas mostradas (0 = más reciente).
+    Devuelve ``'REBUILD'`` si la restauración fue exitosa.
+    """
+    entradas = historial.cargar_historial()
+    ultimas = list(reversed(entradas[-20:]))
+    if not (0 <= idx_fila < len(ultimas)):
+        return None
+    e = ultimas[idx_fila]
+
+    estado.defaults.update({
+        'pso-NP-':     str(e.get('np', '')),
+        'pso-NI-':     str(e.get('ni', '')),
+        'pso-OPT-':    e.get('opt', 'Minimización'),
+        'pso-W_I-':    str(e.get('w_i', 0.9)),
+        'pso-W_F-':    str(e.get('w_f', 0.4)),
+        'pso-C1-':     str(e.get('c1', 1.5)),
+        'pso-C2-':     str(e.get('c2', 1.5)),
+        'pso-D_W-':    bool(e.get('reduccion_w', True)),
+        'pso-P_T-':    bool(e.get('parada_temprana', False)),
+    })
+    estado.nv = int(e.get('nv', estado.nv))
+
+    # Restaurar el origen de la función objetivo
+    origen = str(e.get('origen', ''))
+    if estado.ruta_rna and Path(estado.ruta_rna).name == origen:
+        # El modelo cargado coincide con el registrado: nada que hacer
+        pass
+    elif origen and origen != '—':
+        # Es una función simbólica (o un modelo que ya no está cargado)
+        if not estado.ruta_rna:
+            estado.defaults['pso-FUNCION-'] = origen
+
+    logger.info(f"Parámetros restaurados desde historial id={e.get('id')}")
+    sp.popup_ok(f"Parámetros restaurados desde la ejecución #{e.get('id')}.")
     return 'REBUILD'
