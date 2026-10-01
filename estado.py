@@ -71,5 +71,6 @@ class Estado:
         # --- Resultados (figura persistente) ---
         self.ultima_figura = None
         self.ultimo_dtframe = None
+        self.historial_visible = False
 
 estado = Estado()
