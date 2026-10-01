@@ -2,9 +2,11 @@
 import PySimpleGUI as sp
 
 
-def layout_pso(nv, defaults=None):
+def layout_pso(nv, defaults=None, rna_info=None, mostrar_editar_config=False):
     if defaults is None:
         defaults = {}
+    if rna_info is None:
+        rna_info = 'No hay modelo RNA cargado. Se usará la función simbólica.'
 
     metodos = ['Minimización', 'Maximización']
     lst = sp.Combo(
@@ -30,14 +32,16 @@ def layout_pso(nv, defaults=None):
         [sp.Column(
             [[sp.Button('Editar config PSO del modelo',
                         key='pso-EDITAR_CONFIG-', size=(28, 1))]],
-            key='pso-PIN_EDITAR-', visible=False, pad=(0, 0),
+            key='pso-PIN_EDITAR-',
+            visible=mostrar_editar_config,
+            pad=(0, 0),
         )],
         [sp.Multiline(
             size=(60, 3), key='pso-INFO_RNA-', disabled=True,
             autoscroll=True, font=("Arial", 10),
             expand_x=True,
             # Mensaje inicial — se actualiza al cargar/quitar el modelo
-            default_text='No hay modelo RNA cargado. Se usará la función simbólica.',
+            default_text=rna_info,
         )],
     ]
     frame_0 = sp.Frame(
