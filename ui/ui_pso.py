@@ -151,11 +151,11 @@ def layout_pso(nv, defaults=None, rna_info=None, mostrar_editar_config=False):
         [frame_1],
         [sp.Column([botones_accion], expand_x=True)],
         [frame_prog],
-    ], vertical_alignment='top', expand_x=True, expand_y=True)
+    ], vertical_alignment='top', expand_x=True)
 
     col_der = sp.Column([
         [frame_2],
-    ], vertical_alignment='top', expand_x=True, expand_y=True)
+    ], vertical_alignment='top', expand_x=True)
 
     botones_inferiores = [
         sp.Button('Exportar Datos', size=(12, 1), key='pso-EXPORTAR-'),
