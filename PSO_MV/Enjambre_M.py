@@ -2,8 +2,11 @@ import numpy as np
 import copy
 import time as tm
 import pandas as pd
+import logging
 from pathlib import Path
 from .Particula_M import particula
+
+logger = logging.getLogger(__name__)
 
 class enjambre:
     def __init__(self,n_particulas, n_variables, lim_inf, lim_sup,info=False):
@@ -75,8 +78,8 @@ class enjambre:
         inicio = tm.time()
         for i in range(n_iteraciones):
             if info:
-                print("Iteracion: " + str(i+1) + "/" + str(n_iteraciones))
-                print("-----------------------------")
+                logger.info(f"Iteracion: {i+1}/{n_iteraciones}")
+                logger.info("-----------------------------")
             self.evaluar_enjambre(
                 optimizacion=optimizacion,
                 funcion_objetivo=funcion_objetivo,
@@ -101,7 +104,7 @@ class enjambre:
             if parada_temprana and i > rondas_parada:
                 ultimas_diferencias = np.array(self.diferecia_mejor_valor[-(rondas_parada):])
                 if all(ultimas_diferencias < tolerancia):
-                    print("Se ha alcanzado la condición de parada temprana en la iteración " + str(i+1))
+                    logger.info(f"Se ha alcanzado la condición de parada temprana en la iteración {i+1}")
                     break
             #--------------------------------------------------------------------------------------------
 
@@ -133,13 +136,13 @@ class enjambre:
         self.valor_optimo = copy.deepcopy(self.mej_valor)
         self.posicion_optima = copy.deepcopy(self.mej_posicion)
          
-        print(f"Tiempo de optimizacion: {(final - inicio):.2f} segundos")
-        print(f"Iteraciones: {self.iteracion_optimo}")
-        print(f"Mejor valor encontrado: {(self.valor_optimo):.3f}")
-        print("Mejor posición encontrada:")
+        logger.info(f"Tiempo de optimizacion: {(final - inicio):.2f} segundos")
+        logger.info(f"Iteraciones: {self.iteracion_optimo}")
+        logger.info(f"Mejor valor encontrado: {(self.valor_optimo):.3f}")
+        logger.info("Mejor posición encontrada:")
         for indice, valor in enumerate(np.asarray(self.posicion_optima).reshape(-1), start=1):
-            print(f"  x{indice}: {(valor):.3f}")
-        print()
+            logger.info(f"  x{indice}: {(valor):.3f}")
+        logger.info("-" * 30)
 
 if __name__ == "__main__":
     test = enjambre(
