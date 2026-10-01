@@ -40,6 +40,7 @@ def layout_resultados(historial_visible=False):
     )
 
     # --- Tabla de historial (colapsable) ---
+        # --- Tabla de historial (colapsable) ---
     tabla_layout = [
         [sg.Table(
             values=[],
@@ -53,15 +54,28 @@ def layout_resultados(historial_visible=False):
             enable_events=True,
             expand_x=True,
         )],
-        [sg.Column(
-            [[
-                sg.Button('Limpiar historial', key='res-HIST-LIMPIAR-', size=(18, 1)),
-                sg.Button('Exportar a CSV',    key='res-HIST-EXPORTAR-', size=(18, 1)),
-            ]],
-            expand_x=True,
-            pad=((0, 0), (8, 4)),     # ← espacio arriba y abajo de los botones
-        )],
     ]
+
+    botones_hist = [
+        sg.Button('Limpiar historial', key='res-HIST-LIMPIAR-', size=(18, 1)),
+        sg.Button('Exportar a CSV',    key='res-HIST-EXPORTAR-', size=(18, 1)),
+    ]
+
+    frame_hist = sg.Frame(
+        'Historial de ejecuciones (doble clic para restaurar parámetros)',
+        tabla_layout + [[sg.Column([botones_hist], expand_x=True, pad=((0, 0), (10, 6)))]],
+        font=("Arial", 12, "bold"),
+        expand_x=True,
+        pad=((0, 0), (5, 5)),
+    )
+
+    contenedor_hist = sg.Column(
+        [[frame_hist]],
+        key='res-HIST-CONT-',
+        visible=historial_visible,
+        expand_x=True,
+        pad=((5, 5), (5, 8)),
+    )
     frame_hist = sg.Frame(
         'Historial de ejecuciones (doble clic para restaurar parámetros)',
         tabla_layout, font=("Arial", 12, "bold"),
