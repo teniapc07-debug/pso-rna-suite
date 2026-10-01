@@ -5,6 +5,8 @@ import numpy as np
 import pandas as pd
 import PySimpleGUI as sg
 import tensorflow as tf
+import logging
+from logica.logging_config import operacion_log
 from tensorflow.keras import layers, models
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
@@ -15,6 +17,7 @@ import joblib as jb
 from PSO_MV import funcion_objetivo as modulo_funcion_objetivo
 from estado import estado
 
+logger = logging.getLogger(__name__)
 
 def _dibujar_perdida(window, historial):
     fig, eje = plt.subplots(figsize=(6, 4), dpi=100)
@@ -147,51 +150,61 @@ def _generar_rna(values, window):
         sg.popup_error(f'Error en la RNA: {exc}')
         return
 
-    try:
-        if estado.rna_datos_importados is None:
-            X = np.random.uniform(lim_inf, lim_sup, size=(muestras, nv))
-            y = np.array([func(p) for p in X], dtype=float)
+    with operacion_log('rna') as ruta_log:
+        logger.info(
+            f"Configuración RNA: muestras={muestras}, capas={capas}, "
+            f"neuronas={neuronas}, activacion={activacion}, "
+            f"epocas={epocas}, batch={batch}, nv={nv}"
+        )
+        logger.info(f"Modo: {'importado' if estado.rna_datos_importados is not None else 'sintético'}")
 
-        X_train, X_val, y_train, y_val = train_test_split(
-            X, y, test_size=0.2, random_state=42)
-        sx, sy = StandardScaler(), StandardScaler()
-        X_train = sx.fit_transform(X_train); X_val = sx.transform(X_val)
-        y_train = sy.fit_transform(y_train.reshape(-1, 1))
-        y_val   = sy.transform(y_val.reshape(-1, 1))
+        try:
+            if estado.rna_datos_importados is None:
+                X = np.random.uniform(lim_inf, lim_sup, size=(muestras, nv))
+                y = np.array([func(p) for p in X], dtype=float)
 
-        modelo = models.Sequential([layers.Input(shape=(nv,))])
-        for n in neuronas:
-            modelo.add(layers.Dense(n, activation=activacion))
-        modelo.add(layers.Dense(1))
-        modelo.compile(optimizer='adam', loss='mean_squared_error')
+            X_train, X_val, y_train, y_val = train_test_split(
+                X, y, test_size=0.2, random_state=42)
+            sx, sy = StandardScaler(), StandardScaler()
+            X_train = sx.fit_transform(X_train); X_val = sx.transform(X_val)
+            y_train = sy.fit_transform(y_train.reshape(-1, 1))
+            y_val   = sy.transform(y_val.reshape(-1, 1))
 
-        window['rna-PROGRESO-'].update(current_count=0, max=epocas)
-        window['rna-PORCENTAJE-'].update('0%')
+            modelo = models.Sequential([layers.Input(shape=(nv,))])
+            for n in neuronas:
+                modelo.add(layers.Dense(n, activation=activacion))
+            modelo.add(layers.Dense(1))
+            modelo.compile(optimizer='adam', loss='mean_squared_error')
 
-        class _CB(tf.keras.callbacks.Callback):
-            def on_epoch_end(self, epoch, logs=None):
-                p = epoch + 1
-                window['rna-PROGRESO-'].update(current_count=p, max=epocas)
-                window['rna-PORCENTAJE-'].update(f'{int(p*100/epocas)}%')
-                window['rna-ESTADO-'].update(f'Entrenando época {p}/{epocas}…')
-                window.refresh()
+            window['rna-PROGRESO-'].update(current_count=0, max=epocas)
+            window['rna-PORCENTAJE-'].update('0%')
 
-        hist = modelo.fit(X_train, y_train,
-                          validation_data=(X_val, y_val),
-                          epochs=epocas, batch_size=batch,
-                          callbacks=[_CB()], verbose=0)
-        _dibujar_perdida(window, hist.history)
+            class _CB(tf.keras.callbacks.Callback):
+                def on_epoch_end(self, epoch, logs=None):
+                    p = epoch + 1
+                    window['rna-PROGRESO-'].update(current_count=p, max=epocas)
+                    window['rna-PORCENTAJE-'].update(f'{int(p*100/epocas)}%')
+                    window['rna-ESTADO-'].update(f'Entrenando época {p}/{epocas}…')
+                    window.refresh()
 
-        estado.rna_modelo = modelo
-        estado.rna_escalador_x = sx
-        estado.rna_escalador_y = sy
-        estado.rna_X_validacion = X_val
-        estado.rna_y_validacion = y_val
-        estado.rna_nv = nv
-        window['rna-ESTADO-'].update('Entrenamiento finalizado.')
-    except Exception as exc:
-        sg.popup_error(f'Error durante el entrenamiento: {exc}')
-        window['rna-ESTADO-'].update('El entrenamiento terminó con errores.')
+            hist = modelo.fit(X_train, y_train,
+                            validation_data=(X_val, y_val),
+                            epochs=epocas, batch_size=batch,
+                            callbacks=[_CB()], verbose=0)
+            logger.info(f"Entrenamiento completado: {epocas} épocas")
+            _dibujar_perdida(window, hist.history)
+
+            estado.rna_modelo = modelo
+            estado.rna_escalador_x = sx
+            estado.rna_escalador_y = sy
+            estado.rna_X_validacion = X_val
+            estado.rna_y_validacion = y_val
+            estado.rna_nv = nv
+            window['rna-ESTADO-'].update('Entrenamiento finalizado.')
+        except Exception as exc:
+            logger.error(f"Error durante el entrenamiento: {exc}")
+            sg.popup_error(f'Error durante el entrenamiento: {exc}')
+            window['rna-ESTADO-'].update('El entrenamiento terminó con errores.')
 
 
 def _predecir(values):
@@ -260,6 +273,7 @@ def _exportar_modelo(values):
         }
         with open(c / 'config.json', 'w', encoding='utf-8') as f:
             json.dump(cfg, f, indent=2, ensure_ascii=False)
+            logger.info(f"Exportando modelo RNA a: {c}")
 
         sg.popup(f'Modelo exportado en:\n{c}')
     except Exception as exc:
