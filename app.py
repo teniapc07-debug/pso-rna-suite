@@ -1,12 +1,15 @@
 # app.py
 import sys
 import PySimpleGUI as sg
+import os
+os.environ.setdefault('TF_CPP_MIN_LOG_LEVEL', '2')
 
 from estado import estado, OutputGUI
 from ui.ui_pso import layout_pso
 from ui.ui_rna import layout_rna
 from ui.ui_resultados import layout_resultados
 from logica import pso_runner, rna_runner
+from logica.logging_config import configurar_logging
 
 
 sg.theme('DarkGrey5')
@@ -16,9 +19,14 @@ def _build_window():
     tab_rna = sg.Tab('Constructor RNA',
                      layout_rna(),
                      key='rna-TAB-', expand_x=True, expand_y=True)
-    tab_pso = sg.Tab('Optimizador PSO',
-                     layout_pso(estado.nv, estado.defaults),
-                     key='pso-TAB-', expand_x=True, expand_y=True)
+    tab_pso = sg.Tab(
+        'Optimizador PSO',
+        layout_pso(
+            estado.nv, estado.defaults,
+            rna_info=estado.rna_info_texto, mostrar_editar_config=(estado.ruta_rna is not None),
+        ),
+        key='pso-TAB-', expand_x=True, expand_y=True,
+    )
     tab_res = sg.Tab('Resultados',
                      layout_resultados(),
                      key='res-TAB-', expand_x=True, expand_y=True)
@@ -35,6 +43,8 @@ def _build_window():
 
 def main():
     window = _build_window()
+
+    configurar_logging(window, 'res-OUTPUT-')
 
     sys.stdout = OutputGUI(window, 'res-OUTPUT-', sys.__stdout__)
     sys.stderr = OutputGUI(window, 'res-OUTPUT-', sys.__stderr__)
@@ -60,6 +70,7 @@ def main():
             window = _build_window()
             sys.stdout = OutputGUI(window, 'res-OUTPUT-', sys.__stdout__)
             sys.stderr = OutputGUI(window, 'res-OUTPUT-', sys.__stderr__)
+            configurar_logging(window, 'res-OUTPUT-')
             pso_runner.redibujar_resultados(window)
 
         if event == 'res-LIMPIAR-':

@@ -54,6 +54,7 @@ class Estado:
         # --- Función objetivo activa (simbólica o RNA) ---
         self.funcion_objetivo_rna = None
         self.ruta_rna = None
+        self.rna_info_texto = 'No hay modelo RNA cargado. Se usará la función simbólica.'
 
         # --- RNA ---
         self.rna_datos_importados = None
