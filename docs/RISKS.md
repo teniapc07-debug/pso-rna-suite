@@ -349,7 +349,9 @@ sin que se note hasta que un usuario lo reporte.
 **Impacto**: medio-alto. Afecta a la velocidad de desarrollo y a la
 confianza en los cambios.
 
-**Mitigación actual**: pruebas manuales antes de cada commit.
+**Mitigación actual**: suite de 39 tests con `pytest` cubriendo
+`funcion_objetivo.py`, `Particula_M.py` y `Enjambre_M.py`. Ejecutable con
+`pytest` (o `pytest -m "not slow"` para excluir los tests del enjambre).
 
 **Mitigación pendiente**: punto 7 del roadmap. Escribir tests con `pytest`
 para `funcion_objetivo.py`, `Hibrido.py` y el enjambre con semilla fija.
@@ -364,7 +366,10 @@ diagnóstico post-mortem.
 
 **Impacto**: medio. Dificulta investigar bugs reportados por terceros.
 
-**Mitigación actual**: ninguna.
+**Mitigación actual**: logging estructurado con doble salida (archivo por
+operación en `resultados_pso/logs/` + GUI). Configuración externa en
+`logging_config.json` con fallback silencioso. Formato con timestamp,
+nivel y módulo emisor.
 
 **Mitigación pendiente**: punto 8 del roadmap. Configurar `logging` con
 handler a archivo en `resultados_pso/run_YYYYMMDD_HHMMSS.log`.
@@ -431,7 +436,7 @@ Vista condensada de los 19 riesgos. La columna **Estado** indica:
 | R-14 | De uso | Media | Bajo | Parcial |
 | R-15 | De uso | Media | Medio | Sin mitigar |
 | R-16 | Mantenimiento | Alta | Medio-alto | Parcial |
-| R-17 | Mantenimiento | Alta | Medio | Sin mitigar |
+| R-17 | Mantenimiento | Alta | Medio | Mitigado |
 | R-18 | Mantenimiento | Media | Medio | Parcial |
 | R-19 | Mantenimiento | Media | Bajo | Parcial |
 
@@ -466,10 +471,8 @@ Los riesgos se ordenan por **coste de no mitigarlos** en el contexto actual
 
 | Prioridad | Riesgo | Mitigación prevista | Punto del roadmap |
 |---|---|---|---|
-**Mitigación actual**: suite de 39 tests con `pytest` cubriendo
-`funcion_objetivo.py`, `Particula_M.py` y `Enjambre_M.py`. Ejecutable con
-`pytest` (o `pytest -m "not slow"` para excluir los tests del enjambre).
-| 2 | R-17 | Logging estructurado | Punto 8 |
+| 1 | R-16 | Tests con `pytest` | Punto 7 ✅ |
+| 2 | R-17 | Logging estructurado | Punto 8 ✅ |
 | 3 | R-01 | Migrar a `FreeSimpleGUI` (rama dedicada) | Antes de distribución pública |
 | 4 | R-04 | Verificación de Tk al arrancar + docs de requisitos | Con el empaquetado `.exe` |
 | 5 | R-15 | Advertencia visual cuando `muestras < 100` | Con el punto 8 |
@@ -497,8 +500,13 @@ Reglas para mantener `RISKS.md` útil a lo largo del tiempo:
 4. **Retirar riesgos obsoletos**: si un riesgo deja de aplicar (por
    ejemplo, porque se abandona la dependencia que lo causaba), eliminar la
    entrada y dejar constancia en el commit.
-   - **2026-09-29**: R-16 pasa a mitigación parcial con la incorporación de
+
+### Historial de actualizaciones
+
+- **2026-09-29**: R-16 pasa a mitigación parcial con la incorporación de
   tests automáticos (`feature/tests-pytest`).
+- **2026-09-30**: R-17 pasa a mitigado con logging estructurado por
+  operación (`feature/logging-estructurado`).
 
 Sin estas reglas, el documento envejece y pasa a ser una foto del pasado
 en lugar de una guía viva.
