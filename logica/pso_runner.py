@@ -7,13 +7,15 @@ import numpy as np
 import pandas as pd
 import PySimpleGUI as sp
 import matplotlib.pyplot as plt
+import logging
+from logica.logging_config import operacion_log
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 from PSO_MV import Enjambre_M
 from PSO_MV import funcion_objetivo as modulo_funcion_objetivo
 from RNA import Hibrido
-from estado import estado, OutputGUI
 
+logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------
 # Gráfica
@@ -120,6 +122,8 @@ def handle(event, values, window):
             sp.popup_error(f'Error al cargar el modelo RNA:\n{exc}')
             return None
 
+        logger.info(f"Modelo RNA cargado: {ruta}")
+
         estado.funcion_objetivo_rna = f_pred
         estado.ruta_rna = ruta
         estado.nv = int(nv_rna)
@@ -144,12 +148,14 @@ def handle(event, values, window):
         except Exception:
             pass
 
-        window['pso-INFO_RNA-'].update(
+        texto_info = (
             f'Modelo cargado desde: {ruta}\n'
             f'nv={nv_rna}  |  lim_inf={lim_inf}\n'
             f'lim_sup={lim_sup}\n'
             f'Se usará el modelo RNA como función objetivo.'
         )
+        estado.rna_info_texto = texto_info
+        window['pso-INFO_RNA-'].update(texto_info)
         window['pso-PIN_EDITAR-'].update(visible=True)
         # Resetear progreso
         window['pso-ESTADO-'].update('Modelo RNA listo. Pulsa "Iniciar PSO".')
@@ -161,9 +167,11 @@ def handle(event, values, window):
     if event == 'pso-QUITAR_RNA-':
         estado.funcion_objetivo_rna = None
         estado.ruta_rna = None
-        window['pso-INFO_RNA-'].update(
-            'No hay modelo RNA cargado. Se usará la función simbólica.')
+        texto = 'No hay modelo RNA cargado. Se usará la función simbólica.'
+        estado.rna_info_texto = texto
+        window['pso-INFO_RNA-'].update(texto)
         window['pso-PIN_EDITAR-'].update(visible=False)
+        logger.info("Modelo RNA descargado")
         return None
 
     # --- Importar CSV de parámetros ---
@@ -173,11 +181,12 @@ def handle(event, values, window):
 
     # --- Exportar CSV de parámetros ---
     if event == 'pso-EXPORTAR-':
-        _exportar_csv_params()
+        _exportar_csv_params(values)
         return None
 
     # --- Limpiar datos ---
     if event == 'pso-LIMPIAR-':
+        logger.info("Estado reseteado")
         _limpiar()
         return 'REBUILD'
 
@@ -250,53 +259,103 @@ def _importar_csv_params():
         p = dict(zip(df['parametro'].str.strip(),
                      df['valor'].fillna('').str.strip()))
 
-        def to_bool(n):
-            v = p.get(n, '').lower()
+        # --- Helpers tolerantes a campos vacíos ---
+        def _num(nombre, cast=int):
+            v = p.get(nombre, '')
+            if v == '':
+                return None
+            return cast(v)
+
+        def _bool(nombre):
+            v = p.get(nombre, '').lower()
+            if v == '':
+                return None
             if v not in {'true', 'false'}:
-                raise ValueError(f'{n} debe ser True/False')
+                raise ValueError(f'{nombre} debe ser True/False')
             return v == 'true'
 
-        nv = int(p['NV'])
+        # --- NV es obligatorio ---
+        nv = _num('NV', int)
+        if nv is None:
+            raise ValueError("El CSV no contiene el campo obligatorio 'NV'.")
         if nv < 1:
             raise ValueError('NV debe ser >= 1.')
+
         estado.nv = nv
-        estado.defaults.update({
-            'pso-NP-': str(int(p['NP'])),
-            'pso-NV-': str(nv),
-            'pso-NI-': str(int(p['NI'])),
-            'pso-FUNCION-': p['FUNCION'],
-            'pso-OPT-': p['OPT'],
-            'pso-D_W-': to_bool('D_W'),
-            'pso-P_T-': to_bool('P_T'),
-            'pso-HIST-': to_bool('HIST'),
-        })
+        updates = {'pso-NV-': str(nv)}
+
+        # --- Campos opcionales: solo actualizar si el CSV los trae ---
+        val = _num('NP', int)
+        if val is not None:
+            updates['pso-NP-'] = str(val)
+        val = _num('NI', int)
+        if val is not None:
+            updates['pso-NI-'] = str(val)
+
+        if 'FUNCION' in p:
+            updates['pso-FUNCION-'] = p['FUNCION']
+        if p.get('OPT', ''):
+            updates['pso-OPT-'] = p['OPT']
+
+        for flag, clave in (('D_W', 'pso-D_W-'),
+                            ('P_T', 'pso-P_T-'),
+                            ('HIST', 'pso-HIST-')):
+            val = _bool(flag)
+            if val is not None:
+                updates[clave] = val
+
         for i in range(nv):
-            estado.defaults[f'pso-MIN-{i}-'] = str(float(p[f'MIN_{i}']))
-            estado.defaults[f'pso-MAX-{i}-'] = str(float(p[f'MAX_{i}']))
+            v = p.get(f'MIN_{i}', '')
+            if v != '':
+                updates[f'pso-MIN-{i}-'] = str(float(v))
+            v = p.get(f'MAX_{i}', '')
+            if v != '':
+                updates[f'pso-MAX-{i}-'] = str(float(v))
+
+        estado.defaults.update(updates)
+        logger.info(f"Parámetros importados de {archivo}")
     except Exception as exc:
+        logger.error(f"Error al importar CSV: {exc}")
         sp.popup_error(f'Error al importar CSV:\n{exc}')
 
-
-def _exportar_csv_params():
+def _exportar_csv_params(values):
+    _guardar_defaults(values)
     archivo = sp.popup_get_file('Guardar CSV de parámetros',
                                 save_as=True,
                                 file_types=(("CSV", "*.csv"),),
                                 no_window=True, default_extension='.csv')
     if not archivo:
         return
-    # Asegurar carpeta resultados_pso
     carpeta = Path('resultados_pso')
     carpeta.mkdir(exist_ok=True)
     destino = Path(archivo)
     if destino.parent == Path('.'):
         destino = carpeta / destino.name
+
+    # Mapeo entre nombres documentados (CSV) y claves del estado (GUI)
+    mapa = {
+        'NP':      'pso-NP-',
+        'NI':      'pso-NI-',
+        'FUNCION': 'pso-FUNCION-',
+        'OPT':     'pso-OPT-',
+        'D_W':     'pso-D_W-',
+        'P_T':     'pso-P_T-',
+        'HIST':    'pso-HIST-',
+    }
+    nv = estado.nv
     try:
         with open(destino, 'w', encoding='utf-8') as f:
             f.write('parametro,valor\n')
-            for k, v in estado.defaults.items():
-                f.write(f'{k},{v}\n')
+            f.write(f'NV,{nv}\n')
+            for nombre, clave in mapa.items():
+                f.write(f'{nombre},{estado.defaults.get(clave, "")}\n')
+            for i in range(nv):
+                f.write(f'MIN_{i},{estado.defaults.get(f"pso-MIN-{i}-", "")}\n')
+                f.write(f'MAX_{i},{estado.defaults.get(f"pso-MAX-{i}-", "")}\n')
+        logger.info(f"Parámetros exportados a {destino}")
         sp.popup_ok(f'Datos exportados a {destino}')
     except Exception as exc:
+        logger.error(f"Error al exportar CSV: {exc}")
         sp.popup_error(f'Error al exportar:\n{exc}')
 
 
@@ -304,6 +363,7 @@ def _limpiar():
     estado.nv = 0
     estado.funcion_objetivo_rna = None
     estado.ruta_rna = None
+    estado.rna_info_texto = 'No hay modelo RNA cargado. Se usará la función simbólica.'
     estado.defaults = {
         'pso-MODO_BASICO-': True, 'pso-MODO_IMPORTADO-': False,
         'pso-OPT-': 'Minimización', 'pso-NP-': '', 'pso-NI-': '',
@@ -347,61 +407,74 @@ def _ejecutar_pso(values, window):
                                                  values['pso-D_W-']))
     except (ValueError, TypeError) as exc:
         sp.popup_error(f"Error en datos o función objetivo:\n{exc}")
+        logger.error(f"Error de validación en PSO: {exc}")
         return
 
     optimizacion = values['pso-OPT-']
     parada_temprana = bool(estado.defaults.get('pso-P_T-', values['pso-P_T-']))
 
     # --- Preparar UI de progreso ---
-    window['pso-PROGRESO-'].update(current_count=0, max=n_iteraciones)
-    window['pso-PORCENTAJE-'].update('0%')
-    window['pso-ESTADO-'].update(
-        f'Iniciando PSO ({origen}) — {n_particulas} partículas × {n_iteraciones} iteraciones…')
-    window.refresh()
+    with operacion_log('pso') as ruta_log:
+        logger.info(
+            f"Configuración PSO: NP={n_particulas}, NI={n_iteraciones}, "
+            f"NV={nv_local}, OPT={optimizacion}"
+        )
+        logger.info(f"Origen función objetivo: {origen}")
+        logger.info(f"Límites: inf={lim_inf}, sup={lim_sup}")
+        logger.info(f"Controles: w_i={w_i}, w_f={w_f}, c1={c1}, c2={c2}, "
+                    f"parada_temprana={parada_temprana}")
 
-    def _on_iteracion(actual, total, mejor_valor):
+        window['pso-PROGRESO-'].update(current_count=0, max=n_iteraciones)
+        window['pso-PORCENTAJE-'].update('0%')
+        window['pso-ESTADO-'].update(f'Iniciando PSO ({origen}) ...')
+        window.refresh()
+
+        def _on_iteracion(actual, total, mejor_valor):
+            logger.debug(f"Iteración {actual}/{total}, mejor={float(mejor_valor):.6g}")
+            try:
+                pct = int(actual * 100 / total)
+                window['pso-PROGRESO-'].update(current_count=actual, max=total)
+                window['pso-PORCENTAJE-'].update(f'{pct}%')
+                window['pso-ESTADO-'].update(
+                    f'Iteración {actual}/{total} — mejor valor: {float(mejor_valor):.6g}')
+                window.refresh()
+            except Exception:
+                pass
+
+        enj = Enjambre_M.enjambre(
+            n_variables=nv_local, n_particulas=n_particulas,
+            lim_inf=lim_inf, lim_sup=lim_sup, info=False)
+
         try:
-            pct = int(actual * 100 / total)
-            window['pso-PROGRESO-'].update(current_count=actual, max=total)
-            window['pso-PORCENTAJE-'].update(f'{pct}%')
+            enj.optimizar(
+                n_iteraciones=n_iteraciones, optimizacion=optimizacion,
+                funcion_objetivo=funcion_objetivo, w=w_i, c1=c1, c2=c2,
+                w_i=w_i, w_f=w_f, reduccion_w=reduccion_w, info=False,
+                parada_temprana=parada_temprana, rondas_parada=rondas_parada,
+                tolerancia=tolerancia,
+                carpeta_salida="resultados_pso",
+                iteracion_callback=_on_iteracion,
+            )
+        except ValueError as exc:
+            logger.error(f"Partícula fuera de dominio: {exc}")
+            sp.popup_error(f"Una partícula salió del dominio:\n{exc}")
+            window['pso-ESTADO-'].update('Error durante la ejecución.')
+            return
+
+        try:
+            mejor = float(enj.valor_optimo)
+            logger.info(f"PSO completado: iter={enj.iteracion_optimo}, mejor={mejor:.6g}")
             window['pso-ESTADO-'].update(
-                f'Iteración {actual}/{total} — mejor valor: {float(mejor_valor):.6g}')
-            window.refresh()
+                f'Completado ({enj.iteracion_optimo} iters) — mejor valor: {mejor:.6g}')
+            window['pso-PROGRESO-'].update(current_count=enj.iteracion_optimo,
+                                           max=enj.iteracion_optimo)
+            window['pso-PORCENTAJE-'].update('100%')
         except Exception:
             pass
 
-    enj = Enjambre_M.enjambre(
-        n_variables=nv_local, n_particulas=n_particulas,
-        lim_inf=lim_inf, lim_sup=lim_sup, info=False)
+        if values['pso-HIST-']:
+            actualizar_grafica(window, enj.dtframe)
 
-    try:
-        enj.optimizar(
-            n_iteraciones=n_iteraciones, optimizacion=optimizacion,
-            funcion_objetivo=funcion_objetivo, w=w_i, c1=c1, c2=c2,
-            w_i=w_i, w_f=w_f, reduccion_w=reduccion_w, info=False,
-            parada_temprana=parada_temprana, rondas_parada=rondas_parada,
-            tolerancia=tolerancia,
-            carpeta_salida="resultados_pso",
-            iteracion_callback=_on_iteracion,       # ← NUEVO
-        )
-    except ValueError as exc:
-        sp.popup_error(f"Una partícula salió del dominio:\n{exc}")
-        window['pso-ESTADO-'].update('Error durante la ejecución.')
-        return
-
-    # --- Estado final ---
-    try:
-        mejor = float(enj.valor_optimo)
-        window['pso-ESTADO-'].update(
-            f'Completado ({enj.iteracion_optimo} iters) — mejor valor: {mejor:.6g}')
-        window['pso-PROGRESO-'].update(current_count=enj.iteracion_optimo,
-                                       max=enj.iteracion_optimo)
-        window['pso-PORCENTAJE-'].update('100%')
-    except Exception:
-        pass
-
-    if values['pso-HIST-']:
-        actualizar_grafica(window, enj.dtframe)
 
 
 def guardar_grafica_png(window):
@@ -563,10 +636,13 @@ def _dialogo_editar_config():
                 json.dumps(cfg, indent=2, ensure_ascii=False),
                 encoding='utf-8',
             )
+            logger.info(f"Config.json actualizado: {ruta_config}")
             sp.popup_ok(f'config.json actualizado:\n{ruta_config}')
         except Exception as exc:
+            logger.error(f"Error al guardar config.json: {exc}")
             sp.popup_error(f'No se pudo guardar config.json:\n{exc}')
             return None
 
     # Reconstruir la ventana para que el formulario refleje los nuevos valores
+    logger.info(f"Config editado: {nuevo}")
     return 'REBUILD'
