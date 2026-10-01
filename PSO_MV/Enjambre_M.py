@@ -127,6 +127,7 @@ class enjambre:
         
         final = tm.time()
         self.iteracion_optimo = i + 1
+        self.tiempo_total = final - inicio
 
          # ---- guardar en carpeta dedicada ----
         carpeta = Path(carpeta_salida)
@@ -136,7 +137,7 @@ class enjambre:
         self.valor_optimo = copy.deepcopy(self.mej_valor)
         self.posicion_optima = copy.deepcopy(self.mej_posicion)
          
-        logger.info(f"Tiempo de optimizacion: {(final - inicio):.2f} segundos")
+        logger.info(f"Tiempo de optimizacion: {self.tiempo_total:.2f} segundos")
         logger.info(f"Iteraciones: {self.iteracion_optimo}")
         logger.info(f"Mejor valor encontrado: {(self.valor_optimo):.3f}")
         logger.info("Mejor posición encontrada:")
