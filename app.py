@@ -3,6 +3,7 @@ import sys
 import PySimpleGUI as sg
 import os
 os.environ.setdefault('TF_CPP_MIN_LOG_LEVEL', '2')
+from pathlib import Path
 
 from estado import estado, OutputGUI
 from ui.ui_pso import layout_pso
@@ -47,6 +48,7 @@ def main():
     window = _build_window()
 
     configurar_logging(window, 'res-OUTPUT-')
+    pso_runner.refrescar_lista_modelos(window)
 
     sys.stdout = OutputGUI(window, 'res-OUTPUT-', sys.__stdout__)
     sys.stderr = OutputGUI(window, 'res-OUTPUT-', sys.__stderr__)
@@ -59,6 +61,19 @@ def main():
 
         if event == '-TABS-':
             estado.tab_actual = values['-TABS-']
+            # Si el usuario acaba de volver al tab PSO y hay una exportación nueva,
+            # refrescar la lista y seleccionar el modelo recién exportado.
+            if estado.tab_actual == 'pso-TAB-' and estado.ultima_exportacion:
+                pso_runner.refrescar_lista_modelos(window)
+                try:
+                    nuevo_nombre = Path(estado.ultima_exportacion).name
+                    for modelo in estado.modelos_disponibles:
+                        if modelo['nombre'] == nuevo_nombre:
+                            window['pso-MODELO_COMBO-'].update(value=modelo['display'])
+                            break
+                except Exception:
+                    pass
+                estado.ultima_exportacion = None
             continue
 
         resultado = None

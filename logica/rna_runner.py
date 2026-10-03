@@ -36,7 +36,6 @@ def _dibujar_perdida(window, historial):
     fc.draw()
     fc.get_tk_widget().pack(fill='both', expand=True)
 
-
 def handle(event, values, window):
     # --- Cambio de modo ---
     if event in ('rna-MODO-SINTETICO-', 'rna-MODO-IMPORTADO-'):
@@ -67,7 +66,6 @@ def handle(event, values, window):
         return None
 
     return None
-
 
 def _importar_csv(values, window):
     archivo = sg.popup_get_file('Seleccione un CSV',
@@ -104,7 +102,6 @@ def _importar_csv(values, window):
     except Exception as exc:
         estado.rna_datos_importados = None
         sg.popup_error(f'Error al importar CSV:\n{exc}')
-
 
 def _generar_rna(values, window):
     # --- Recolectar entradas de X, y, nv ---
@@ -206,7 +203,6 @@ def _generar_rna(values, window):
             sg.popup_error(f'Error durante el entrenamiento: {exc}')
             window['rna-ESTADO-'].update('El entrenamiento terminó con errores.')
 
-
 def _predecir(values):
     try:
         vals = [float(x) for x in values['rna-VALORES-'].split(',')]
@@ -221,7 +217,6 @@ def _predecir(values):
         sg.popup(f'Predicción: {pred[0][0]}\nPérdida validación: {loss:.6f}')
     except Exception as exc:
         sg.popup_error(f'Error en la predicción: {exc}')
-
 
 def _exportar_modelo(values):
     if estado.rna_modelo is None:
@@ -273,6 +268,7 @@ def _exportar_modelo(values):
         }
         with open(c / 'config.json', 'w', encoding='utf-8') as f:
             json.dump(cfg, f, indent=2, ensure_ascii=False)
+            estado.ultima_exportacion = str(c)
             logger.info(f"Exportando modelo RNA a: {c}")
 
         sg.popup(f'Modelo exportado en:\n{c}')

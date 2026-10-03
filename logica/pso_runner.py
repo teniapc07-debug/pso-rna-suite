@@ -12,6 +12,7 @@ from logica.logging_config import operacion_log
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from logica import historial
 
+from logica import buscador_modelos
 from PSO_MV import Enjambre_M
 from PSO_MV import funcion_objetivo as modulo_funcion_objetivo
 from RNA import Hibrido
@@ -29,7 +30,6 @@ def _embed_figure(window, fig):
     fc = FigureCanvasTkAgg(fig, master=canvas_tk)
     fc.draw()
     fc.get_tk_widget().pack(side='top', fill='both', expand=1)
-
 
 def actualizar_grafica(window, dtframe):
     """Dibuja la evolución del mejor valor y guarda la figura en estado."""
@@ -139,6 +139,25 @@ def handle(event, values, window):
 
     # --- Cargar modelo RNA ---
     if event == 'pso-CARGAR_RNA-':
+        # Prioridad: ComboBox > campo oculto de FolderBrowse
+        valor_combo = values.get('pso-MODELO_COMBO-', '').strip()
+        valor_manual = values.get('pso-RUTA_RNA-', '').strip()
+        ruta = buscador_modelos.resolver_ruta(
+            valor_combo or valor_manual,
+            estado.modelos_disponibles,
+        )
+        if not ruta:
+            sp.popup_error('Seleccione un modelo del combo o una carpeta '
+                           'con "Examinar…".')
+            return None
+        try:
+            f_pred, nv_rna, lim_inf, lim_sup = Hibrido.cargar_funcion_prediccion(ruta)
+        except Exception as exc:
+            sp.popup_error(f'Error al cargar el modelo RNA:\n{exc}')
+            return None
+
+        logger.info(f"Modelo RNA cargado: {ruta}")
+        
         ruta = values.get('pso-RUTA_RNA-', '').strip()
         if not ruta:
             sp.popup_error('Seleccione la carpeta del modelo RNA.')
@@ -220,6 +239,11 @@ def handle(event, values, window):
     # --- Iniciar PSO ---
     if event == 'pso-INI-':
         _ejecutar_pso(values, window)
+        return None
+
+    # --- Refrescar lista de modelos ---
+    if event == 'pso-REFRESCAR_LISTA-':
+        refrescar_lista_modelos(window)
         return None
 
     return None
@@ -817,3 +841,30 @@ def restaurar_desde_historial(window, idx_fila):
     logger.info(f"Parámetros restaurados desde historial id={e.get('id')}")
     sp.popup_ok(f"Parámetros restaurados desde la ejecución #{e.get('id')}.")
     return 'REBUILD'
+
+# ---------------------------------------------------------------
+# Lista de modelos RNA
+# ---------------------------------------------------------------
+def refrescar_lista_modelos(window):
+    """Reescanea el filesystem y vuelve a poblar el ComboBox."""
+    modelos = buscador_modelos.buscar_modelos_disponibles()
+    estado.modelos_disponibles = modelos
+    displays = [m['display'] for m in modelos]
+
+    # Mantener la selección actual si sigue existiendo
+    actual = ''
+    try:
+        actual = window['pso-MODELO_COMBO-'].get()
+    except Exception:
+        pass
+
+    window['pso-MODELO_COMBO-'].update(values=displays)
+    if actual in displays:
+        window['pso-MODELO_COMBO-'].update(value=actual)
+
+    if not displays:
+        window['pso-INFO_RNA-'].update(
+            'No se encontraron modelos RNA en el proyecto.\n'
+            'Exporta un modelo desde el tab RNA o usa "Examinar…".'
+        )
+    return modelos
