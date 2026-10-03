@@ -292,6 +292,11 @@ falla, popup con el error. No hay validación de `version` todavía.
 **Mitigación pendiente**: validar el campo `version` y rechazar versiones
 desconocidas con un mensaje claro.
 
+**Mitigación adicional (2026-10-02)**: `buscador_modelos` valida que el
+`config.json` tenga `tipo: "RNA"` y que existan los tres archivos
+auxiliares antes de listar un modelo. Los modelos incompletos se ignoran
+con warning en el log.
+
 #### R-13 — Exportación a carpeta sin permisos
 
 **Descripción**: el usuario elige una carpeta donde no tiene permiso de
@@ -507,6 +512,8 @@ Reglas para mantener `RISKS.md` útil a lo largo del tiempo:
   tests automáticos (`feature/tests-pytest`).
 - **2026-09-30**: R-17 pasa a mitigado con logging estructurado por
   operación (`feature/logging-estructurado`).
+- **2026-10-02**: R-12 refuerza su mitigación con validación de esquema
+  en el escáner de modelos (`feature/lista-modelos`).
 
 Sin estas reglas, el documento envejece y pasa a ser una foto del pasado
 en lugar de una guía viva.

@@ -353,8 +353,11 @@ que fue exportada previamente por el flujo 5.
 
 ### Pasos
 
-1. Si `pso-RUTA_RNA-` está vacío → popup
-   `"Seleccione la carpeta del modelo RNA."` y termina.
+1. Se determina la ruta del modelo:
+   - Si el `ComboBox` tiene un valor que coincide con un `display` conocido,
+     se resuelve a la ruta de ese modelo.
+   - Si no, se trata como ruta manual (escrita a mano o vía FolderBrowse).
+   - Si ambas están vacías, popup de error.
 2. Se llama a `Hibrido.cargar_funcion_prediccion(ruta)`:
    - Verifica existencia de `modelo.keras`, `scaler_x.save`,
      `scaler_y.save`, `config.json`.
@@ -384,6 +387,34 @@ que fue exportada previamente por el flujo 5.
   modelo RNA.
 - **Modelo incompatible con Keras actual** → excepción durante
   `load_model`; popup con el mensaje.
+
+  ### 6.A Selección del modelo desde la lista
+
+**Disparador**: cambio de pestaña al tab PSO con una exportación reciente,
+o pulsación del botón `⟳`.
+
+**Precondiciones**: ninguna.
+
+**Entradas**: sistema de archivos del proyecto.
+
+**Salidas / efectos**: el `ComboBox` `pso-MODELO_COMBO-` se puebla con
+los modelos encontrados; si el usuario acaba de exportar uno desde el
+tab RNA, queda seleccionado automáticamente.
+
+**Pasos**
+
+1. `buscador_modelos.buscar_modelos_disponibles()` escanea el proyecto
+   con `rglob('config.json')`.
+2. Se descartan las carpetas conocidas (`PSO_MV`, `RNA`, `ui`, `logica`,
+   `tests`, `resultados_pso`, `.git`, entornos virtuales).
+3. Se descartan los `config.json` cuyo campo `tipo` no sea `"RNA"`.
+4. Se descartan los modelos incompletos (falta `modelo.keras`,
+   `scaler_x.save` o `scaler_y.save`).
+5. Los modelos válidos se ordenan por `mtime` descendente.
+6. El `ComboBox` recibe la lista de `display` strings, formato
+   `"<nombre> — nv=<n> | <dd/mm HH:MM>"`.
+7. Si no hay modelos, el multiline `pso-INFO_RNA-` muestra un mensaje
+   indicando que se exporte uno o se use "Examinar…".
 
 ---
 
