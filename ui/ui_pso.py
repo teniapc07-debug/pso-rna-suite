@@ -15,8 +15,8 @@ def layout_pso(nv, defaults=None, rna_info=None, mostrar_editar_config=False):
         key='pso-OPT-',
     )
 
-    # ------------------------------------------------------------------
-    # Sección 0: Importación de RNA (opcional, siempre visible)
+        # ------------------------------------------------------------------
+    # Sección 0: Importación de RNA (opcional)
     # ------------------------------------------------------------------
     importacion = [
         [sp.Text(
@@ -24,9 +24,21 @@ def layout_pso(nv, defaults=None, rna_info=None, mostrar_editar_config=False):
             'definida en Controles.',
             font=("Arial", 10, "italic"), text_color='#B0B0B0',
             expand_x=True)],
-        [sp.Text('Carpeta con modelo RNA exportado:', font=("Arial", 12))],
-        [sp.Input(key='pso-RUTA_RNA-', size=(40, 1), font=("Arial", 12)),
-         sp.FolderBrowse('Examinar', size=(10, 1))],
+        [sp.Text('Modelo RNA disponible:', font=("Arial", 12))],
+        [sp.Combo(
+            values=[],
+            key='pso-MODELO_COMBO-',
+            size=(45, 1),
+            readonly=False,
+            enable_events=False,
+            font=("Arial", 11),
+            default_value='',
+        ),
+         sp.Button('⟳', key='pso-REFRESCAR_LISTA-', size=(4, 1),
+                   tooltip='Volver a escanear modelos disponibles'),
+         sp.FolderBrowse('Examinar…', size=(12, 1), key='pso-EXAMINAR-',
+                         target='pso-RUTA_RNA-'),
+         sp.Input(key='pso-RUTA_RNA-', size=(20, 1), visible=False)],
         [sp.Button('Cargar modelo RNA', key='pso-CARGAR_RNA-', size=(20, 1)),
          sp.Button('Quitar modelo',    key='pso-QUITAR_RNA-',  size=(15, 1))],
         [sp.Column(
@@ -40,7 +52,6 @@ def layout_pso(nv, defaults=None, rna_info=None, mostrar_editar_config=False):
             size=(60, 3), key='pso-INFO_RNA-', disabled=True,
             autoscroll=True, font=("Arial", 10),
             expand_x=True,
-            # Mensaje inicial — se actualiza al cargar/quitar el modelo
             default_text=rna_info,
         )],
     ]

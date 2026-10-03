@@ -73,4 +73,8 @@ class Estado:
         self.ultimo_dtframe = None
         self.historial_visible = False
 
+         # --- Lista de modelos RNA disponibles ---
+        self.modelos_disponibles = []
+        self.ultima_exportacion = None
+
 estado = Estado()
