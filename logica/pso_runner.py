@@ -80,11 +80,11 @@ def _guardar_defaults(values):
 
 
 def handle(event, values, window):
-    if event == 'res-HIST-TOGGLE-':
+    if event == 'res-HISTTOGGLE-':
         toggle_historial(window)
         return None
 
-    if event == 'res-HIST-LIMPIAR-':
+    if event == 'res-HISTLIMPIAR-':
         limpiar_historial_ui(window)
         return None
     
@@ -96,12 +96,12 @@ def handle(event, values, window):
         guardar_grafica_png(window)
         return None
 
-    if event == 'res-HIST-EXPORTAR-':
+    if event == 'res-HISTEXPORTAR-':
         exportar_historial_csv()
         return None
 
-    if event == 'res-HISTORIAL-':
-        seleccion = values.get('res-HISTORIAL-', [])
+    if event == 'res-HISTTABLA-':
+        seleccion = values.get('res-HISTTABLA-', [])
         if seleccion:
             return restaurar_desde_historial(window, seleccion[0])
         return None
@@ -726,13 +726,13 @@ def refrescar_tabla_historial(window):
             _formato_tiempo(float(e.get('tiempo_seg', 0.0))),
             str(e.get('timestamp', '')).replace('T', ' ')[:19],
         ])
-    window['res-HISTORIAL-'].update(values=filas)
+    window['res-HISTTABLA-'].update(values=filas)
 
 
 def toggle_historial(window):
     """Alterna la visibilidad del panel y refresca la tabla al mostrarlo."""
     estado.historial_visible = not estado.historial_visible
-    window['res-HIST-CONT-'].update(visible=estado.historial_visible)
+    window['res-HISTCONT-'].update(visible=estado.historial_visible)
     if estado.historial_visible:
         refrescar_tabla_historial(window)
 
@@ -742,7 +742,7 @@ def limpiar_historial_ui(window):
     if not sp.popup_yes_no('¿Vaciar todo el historial de ejecuciones?'):
         return
     historial.limpiar_historial()
-    window['res-HISTORIAL-'].update(values=[])
+    window['res-HISTTABLA-'].update(values=[])
     sp.popup_ok('Historial vaciado.')
 
 

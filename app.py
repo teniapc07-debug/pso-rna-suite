@@ -62,12 +62,11 @@ def main():
             continue
 
         resultado = None
-        if isinstance(event, str) and event.startswith('pso-'):
-            resultado = pso_runner.handle(event, values, window)
-        elif isinstance(event, str) and event.startswith('rna-'):
-            resultado = rna_runner.handle(event, values, window)
-        elif isinstance(event, str) and event.startswith('res-'):
-            resultado = pso_runner.handle(event, values, window) 
+        if isinstance(event, str):
+            if event.startswith('pso-') or event.startswith('res-'):
+                resultado = pso_runner.handle(event, values, window)
+            elif event.startswith('rna-'):
+                resultado = rna_runner.handle(event, values, window)
 
         if resultado == 'REBUILD':
             window.close()
