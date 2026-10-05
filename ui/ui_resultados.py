@@ -55,7 +55,7 @@ def layout_resultados(historial_visible=False):
 
     botones_hist = [
         sg.Button('Limpiar historial', key='res-HISTLIMPIAR-', size=(18, 1)),
-        sg.Button('Exportar a CSV',    key='res-HISTEXPORTAR-', size=(18, 1)),
+        sg.Button('Exportar Historial',    key='res-HISTEXPORTAR-', size=(18, 1)),
     ]
 
     frame_hist = sg.Frame(
