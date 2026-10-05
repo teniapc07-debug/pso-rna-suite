@@ -11,6 +11,7 @@ import logging
 from logica.logging_config import operacion_log
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from logica import historial
+from logica import io_tablas
 
 from logica import buscador_modelos
 from PSO_MV import Enjambre_M
@@ -97,7 +98,7 @@ def handle(event, values, window):
         return None
 
     if event == 'res-HISTEXPORTAR-':
-        exportar_historial_csv()
+        exportar_historial_tabla()
         return None
 
     if event == 'res-HISTTABLA-':
@@ -298,17 +299,19 @@ def _dialogo_avanzados():
 
 
 def _importar_csv_params():
-    archivo = sp.popup_get_file('Seleccione CSV de parámetros',
-                                file_types=(("CSV", "*.csv"),),
-                                no_window=True)
+    archivo = sp.popup_get_file(
+        'Seleccione un archivo de parámetros',
+        file_types=io_tablas.filtros_lectura(),
+        no_window=True,
+    )
     if not archivo:
         return
     try:
-        df = pd.read_csv(archivo, dtype=str)
+        df = io_tablas.leer_tabla(archivo, dtype=str)
         if not {'parametro', 'valor'}.issubset(df.columns):
-            raise ValueError("El CSV debe tener columnas 'parametro' y 'valor'.")
-        p = dict(zip(df['parametro'].str.strip(),
-                     df['valor'].fillna('').str.strip()))
+            raise ValueError("El archivo debe tener columnas 'parametro' y 'valor'.")
+        p = dict(zip(df['parametro'].astype(str).str.strip(),
+                     df['valor'].fillna('').astype(str).str.strip()))
 
         # --- Helpers tolerantes a campos vacíos ---
         def _num(nombre, cast=int):
@@ -328,14 +331,13 @@ def _importar_csv_params():
         # --- NV es obligatorio ---
         nv = _num('NV', int)
         if nv is None:
-            raise ValueError("El CSV no contiene el campo obligatorio 'NV'.")
+            raise ValueError("El archivo no contiene el campo obligatorio 'NV'.")
         if nv < 1:
             raise ValueError('NV debe ser >= 1.')
 
         estado.nv = nv
         updates = {'pso-NV-': str(nv)}
 
-        # --- Campos opcionales: solo actualizar si el CSV los trae ---
         val = _num('NP', int)
         if val is not None:
             updates['pso-NP-'] = str(val)
@@ -366,15 +368,18 @@ def _importar_csv_params():
         estado.defaults.update(updates)
         logger.info(f"Parámetros importados de {archivo}")
     except Exception as exc:
-        logger.error(f"Error al importar CSV: {exc}")
-        sp.popup_error(f'Error al importar CSV:\n{exc}')
+        logger.error(f"Error al importar parámetros: {exc}")
+        sp.popup_error(f'Error al importar:\n{exc}')
 
 def _exportar_csv_params(values):
     _guardar_defaults(values)
-    archivo = sp.popup_get_file('Guardar CSV de parámetros',
-                                save_as=True,
-                                file_types=(("CSV", "*.csv"),),
-                                no_window=True, default_extension='.csv')
+    archivo = sp.popup_get_file(
+        'Guardar archivo de parámetros',
+        save_as=True,
+        file_types=io_tablas.filtros_escritura(),
+        no_window=True,
+        default_extension='.xlsx',
+    )
     if not archivo:
         return
     carpeta = Path('resultados_pso')
@@ -383,7 +388,6 @@ def _exportar_csv_params(values):
     if destino.parent == Path('.'):
         destino = carpeta / destino.name
 
-    # Mapeo entre nombres documentados (CSV) y claves del estado (GUI)
     mapa = {
         'NP':      'pso-NP-',
         'NI':      'pso-NI-',
@@ -394,19 +398,22 @@ def _exportar_csv_params(values):
         'HIST':    'pso-HIST-',
     }
     nv = estado.nv
+
+    filas = [('NV', nv)]
+    for nombre, clave in mapa.items():
+        filas.append((nombre, estado.defaults.get(clave, '')))
+    for i in range(nv):
+        filas.append((f'MIN_{i}', estado.defaults.get(f'pso-MIN-{i}-', '')))
+        filas.append((f'MAX_{i}', estado.defaults.get(f'pso-MAX-{i}-', '')))
+
+    df = pd.DataFrame(filas, columns=['parametro', 'valor'])
+
     try:
-        with open(destino, 'w', encoding='utf-8') as f:
-            f.write('parametro,valor\n')
-            f.write(f'NV,{nv}\n')
-            for nombre, clave in mapa.items():
-                f.write(f'{nombre},{estado.defaults.get(clave, "")}\n')
-            for i in range(nv):
-                f.write(f'MIN_{i},{estado.defaults.get(f"pso-MIN-{i}-", "")}\n')
-                f.write(f'MAX_{i},{estado.defaults.get(f"pso-MAX-{i}-", "")}\n')
-        logger.info(f"Parámetros exportados a {destino}")
-        sp.popup_ok(f'Datos exportados a {destino}')
+        ruta = io_tablas.escribir_tabla(df, destino, hoja='Parametros')
+        logger.info(f"Parámetros exportados a {ruta}")
+        sp.popup_ok(f'Datos exportados a {ruta}')
     except Exception as exc:
-        logger.error(f"Error al exportar CSV: {exc}")
+        logger.error(f"Error al exportar: {exc}")
         sp.popup_error(f'Error al exportar:\n{exc}')
 
 def _limpiar():
@@ -770,34 +777,42 @@ def limpiar_historial_ui(window):
     sp.popup_ok('Historial vaciado.')
 
 
-def exportar_historial_csv():
-    """Exporta el historial completo a un CSV elegido por el usuario."""
+def exportar_historial_tabla():
+    """Exporta el historial completo a Excel (o CSV si el usuario lo pide)."""
     entradas = historial.cargar_historial()
     if not entradas:
         sp.popup_error('No hay historial para exportar.')
         return
     archivo = sp.popup_get_file(
-        'Guardar historial como CSV',
+        'Guardar historial',
         save_as=True,
-        file_types=(("CSV", "*.csv"),),
-        no_window=True, default_extension='.csv',
+        file_types=io_tablas.filtros_escritura(),
+        no_window=True,
+        default_extension='.xlsx',
     )
     if not archivo:
         return
     destino = Path(archivo)
+
+    filas = []
+    for e in entradas:
+        filas.append({
+            'id': e.get('id', ''),
+            'timestamp': e.get('timestamp', ''),
+            'origen': e.get('origen', ''),
+            'np': e.get('np', ''),
+            'ni': e.get('ni', ''),
+            'opt': e.get('opt', ''),
+            'mejor_valor': e.get('mejor_valor', ''),
+            'iteracion_optimo': e.get('iteracion_optimo', ''),
+            'tiempo_seg': e.get('tiempo_seg', ''),
+        })
+    df = pd.DataFrame(filas)
+
     try:
-        with open(destino, 'w', encoding='utf-8') as f:
-            f.write('id,timestamp,origen,np,ni,opt,mejor_valor,'
-                    'iteracion_optimo,tiempo_seg\n')
-            for e in entradas:
-                f.write(
-                    f"{e.get('id','')},{e.get('timestamp','')},"
-                    f"{e.get('origen','')},{e.get('np','')},{e.get('ni','')},"
-                    f"{e.get('opt','')},{e.get('mejor_valor','')},"
-                    f"{e.get('iteracion_optimo','')},{e.get('tiempo_seg','')}\n"
-                )
-        logger.info(f"Historial exportado a {destino}")
-        sp.popup_ok(f'Historial exportado a:\n{destino}')
+        ruta = io_tablas.escribir_tabla(df, destino, hoja='Historial')
+        logger.info(f"Historial exportado a {ruta}")
+        sp.popup_ok(f'Historial exportado a:\n{ruta}')
     except Exception as exc:
         logger.error(f"Error al exportar historial: {exc}")
         sp.popup_error(f'Error al exportar:\n{exc}')
