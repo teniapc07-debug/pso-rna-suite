@@ -413,6 +413,38 @@ y lee el JSON, pero no valida campos específicos.
 **Mitigación pendiente**: definir un esquema (p. ej. `jsonschema`) y
 validar al exportar y al cargar.
 
+#### R-20 — Incompatibilidad de PySimpleGUI entre versiones
+
+**Descripción**: PySimpleGUI ha evolucionado entre las ramas 4.x y 5.x con
+cambios en la resolución de claves y la reutilización de widgets. Un layout
+que funciona en 4.x puede fallar en 5.x con errores como
+`PROMPTING TO REUSE AN ELEMENT` o `The closest matching key`, especialmente
+cuando dos claves comparten un prefijo ambiguo (por ejemplo
+`res-HISTORIAL-` y `res-HIST-CONT-`).
+
+**Probabilidad**: alta si el proyecto se distribuye a terceros que instalan
+su propia versión de PySimpleGUI.
+
+**Impacto**: medio. Un layout que funciona en la máquina del desarrollador
+puede fallar en la del usuario sin cambios aparentes en el código.
+
+**Mitigación actual**:
+
+- El proyecto usa claves con prefijos únicos y sin guiones internos
+  después del prefijo (`res-HISTTABLA-`, no `res-HIST-TABLA-`).
+- `pyrightconfig.json` en la raíz relaja los diagnósticos de Pylance
+  para que los falsos positivos no oculten errores reales.
+- Se prueba la app en dos máquinas con versiones distintas de
+  PySimpleGUI antes de fusionar a `main`.
+
+**Mitigación pendiente**:
+
+- Fijar la versión de PySimpleGUI en `requirements.txt` a una rama
+  específica (`PySimpleGUI>=4.60,<5.0`).
+- Documentar la versión mínima en `CONSTRAINTS.md`, sección 6.1.
+- Reevaluar la migración a `FreeSimpleGUI` (ver R-01), que mantiene
+  una sola rama activa y elimina este problema de raíz.
+
 ---
 
 ## 4. Matriz resumen
@@ -444,6 +476,7 @@ Vista condensada de los 19 riesgos. La columna **Estado** indica:
 | R-17 | Mantenimiento | Alta | Medio | Mitigado |
 | R-18 | Mantenimiento | Media | Medio | Parcial |
 | R-19 | Mantenimiento | Media | Bajo | Parcial |
+| R-20 | Dependencia externa | Alta | Medio | Parcial |
 
 ---
 
@@ -514,6 +547,8 @@ Reglas para mantener `RISKS.md` útil a lo largo del tiempo:
   operación (`feature/logging-estructurado`).
 - **2026-10-02**: R-12 refuerza su mitigación con validación de esquema
   en el escáner de modelos (`feature/lista-modelos`).
+- **2026-10-05**: R-20 añadido tras detectar colisión de claves entre
+  PySimpleGUI 4.x y 5.x en la máquina secundaria.
 
 Sin estas reglas, el documento envejece y pasa a ser una foto del pasado
 en lugar de una guía viva.
