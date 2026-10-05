@@ -1,0 +1,22 @@
+# Normaliza fin de línea a LF en el repo
+* text=auto eol=lf
+
+# Archivos binarios: no tratar como texto
+*.png binary
+*.jpg binary
+*.keras binary
+*.save binary
+*.h5 binary
+*.xlsx binary
+
+# Archivos generados: no trackear cambios de fin de línea
+*.csv text eol=lf
+*.json text eol=lf
+*.log text eol=lf
+
+# Scripts de shell siempre LF
+*.sh text eol=lf
+
+# Scripts de Windows siempre CRLF
+*.bat text eol=crlf
+*.ps1 text eol=crlf
