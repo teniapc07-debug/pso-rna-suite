@@ -6,6 +6,7 @@ import pandas as pd
 import PySimpleGUI as sg
 import tensorflow as tf
 import logging
+from logica import io_tablas
 from logica.logging_config import operacion_log
 from tensorflow.keras import layers, models
 from sklearn.model_selection import train_test_split
@@ -68,15 +69,17 @@ def handle(event, values, window):
     return None
 
 def _importar_csv(values, window):
-    archivo = sg.popup_get_file('Seleccione un CSV',
-                                file_types=(("CSV", "*.csv"),),
-                                no_window=True)
+    archivo = sg.popup_get_file(
+        'Seleccione un archivo de datos',
+        file_types=io_tablas.filtros_lectura(),
+        no_window=True,
+    )
     if not archivo:
         return
     try:
-        df = pd.read_csv(archivo)
+        df = io_tablas.leer_tabla(archivo)  # sin dtype=str: queremos números
         if df.empty:
-            raise ValueError('CSV vacío.')
+            raise ValueError('El archivo está vacío.')
         col_y = values.get('rna-COL_Y-') or df.columns[-1]
         if col_y not in df.columns:
             raise ValueError(f'Columna "{col_y}" no existe.')
@@ -85,7 +88,7 @@ def _importar_csv(values, window):
         if X.shape[1] < 1:
             raise ValueError('Se requiere al menos una columna de entrada.')
         if np.isnan(X).any() or np.isnan(y).any():
-            raise ValueError('Hay NaNs en el CSV.')
+            raise ValueError('Hay valores faltantes o no numéricos.')
 
         columnas_x = [c for c in df.columns if c != col_y]
         estado.rna_datos_importados = {
@@ -97,12 +100,12 @@ def _importar_csv(values, window):
         window['rna-FRAME-0-'].update(visible=False)
         window['rna-FRAME-4-'].update(visible=True)
         window['rna-ESTADO-'].update(
-            f'CSV: {X.shape[0]} muestras, {X.shape[1]} entradas. '
+            f'Datos: {X.shape[0]} muestras, {X.shape[1]} entradas. '
             f'Salida "{col_y}".')
     except Exception as exc:
         estado.rna_datos_importados = None
-        sg.popup_error(f'Error al importar CSV:\n{exc}')
-
+        sg.popup_error(f'Error al importar:\n{exc}')
+        
 def _generar_rna(values, window):
     # --- Recolectar entradas de X, y, nv ---
     if not values['rna-MODO-IMPORTADO-']:
