@@ -17,6 +17,64 @@ y el versionado sigue [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Fixed
 - (aquí van los arreglos de bugs)
+---
+
+## [v0.2.0] - 2026-10-05
+
+Segunda release. Consolida la base técnica del proyecto con tests,
+logging persistente e historial de ejecuciones.
+
+### Added
+
+#### Tests
+- Suite de 52 tests con `pytest`:
+  - Parser de función objetivo (24 tests).
+  - Clase `partícula` (6 tests).
+  - Motor del enjambre (9 tests).
+  - Módulo de logging (7 tests).
+  - Módulo de historial (6 tests).
+- Configuración en `pyproject.toml` con marcadores `slow` e `integration`.
+
+#### Logging estructurado
+- Módulo `logica/logging_config.py` con doble salida (archivo + GUI).
+- Un archivo de log por operación en `resultados_pso/logs/`.
+- Configuración externa en `logging_config.json` con fallback silencioso.
+- Silenciado de loggers ruidosos (TensorFlow, matplotlib, absl).
+- Variable de entorno `PSO_LOG_LEVEL` para ajustar nivel en runtime.
+
+#### Historial de ejecuciones
+- Módulo `logica/historial.py` con persistencia JSON.
+- Tope de 200 entradas con descarte de las más antiguas.
+- Tabla colapsable en el tab Resultados con las últimas 20 ejecuciones.
+- Restauración de parámetros con doble clic sobre una fila.
+- Exportación del historial a CSV.
+- Registro automático al terminar cada PSO exitoso.
+
+#### Documentación
+- Índice de documentación en el README.
+- Sección "Tests" en el README.
+- `pyrightconfig.json` para análisis estático consistente.
+
+### Changed
+- `PSO_MV/Enjambre_M.py` expone `tiempo_total` como atributo.
+- Los layouts de PSO y Resultados usan prefijos de claves sin guiones
+  internos para evitar ambigüedad entre versiones de PySimpleGUI.
+
+### Fixed
+- Persistencia del texto informativo del modelo RNA tras `REBUILD`.
+- Simetría entre exportación e importación del CSV de parámetros.
+- Colisión de claves entre `res-HISTORIAL-` y `res-HIST-CONT-`.
+- Eliminado el log duplicado por iteración en el enjambre.
+- Recorte de botones del historial en resoluciones bajas.
+
+### Docs
+- `docs/ARCHITECTURE.md`: estructura estática del proyecto.
+- `docs/WORKFLOWS.md`: flujos operativos paso a paso.
+- `docs/CONSTRAINTS.md`: reglas, dominios, decisiones de diseño.
+- `docs/RISKS.md`: 20 riesgos catalogados con matriz y plan de mitigación.
+
+### Removed
+- Ninguno.
 
 ---
 
