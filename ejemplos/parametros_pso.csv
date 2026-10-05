@@ -1,0 +1,15 @@
+parametro,valor
+NV,3
+NP,30
+NI,50
+FUNCION,x1**2 + x2**2 + x3**2
+OPT,Minimización
+D_W,True
+P_T,False
+HIST,True
+MIN_0,-5
+MAX_0,5
+MIN_1,-5
+MAX_1,5
+MIN_2,-5
+MAX_2,5
