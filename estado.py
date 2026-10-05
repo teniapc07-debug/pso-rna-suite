@@ -76,5 +76,6 @@ class Estado:
          # --- Lista de modelos RNA disponibles ---
         self.modelos_disponibles = []
         self.ultima_exportacion = None
+        self.modelo_combo_actual = ''
 
 estado = Estado()

@@ -141,6 +141,7 @@ def handle(event, values, window):
     if event == 'pso-CARGAR_RNA-':
         # Prioridad: ComboBox > campo oculto de FolderBrowse
         valor_combo = values.get('pso-MODELO_COMBO-', '').strip()
+        estado.modelo_combo_actual = valor_combo
         valor_manual = values.get('pso-RUTA_RNA-', '').strip()
         ruta = buscador_modelos.resolver_ruta(
             valor_combo or valor_manual,
@@ -167,7 +168,7 @@ def handle(event, values, window):
         except Exception as exc:
             sp.popup_error(f'Error al cargar el modelo RNA:\n{exc}')
             return None
-
+    
         logger.info(f"Modelo RNA cargado: {ruta}")
 
         estado.funcion_objetivo_rna = f_pred
@@ -179,7 +180,6 @@ def handle(event, values, window):
 
         # Rellenar parámetros PSO sugeridos (si config.json los tiene)
         try:
-            import json
             cfg = json.loads((Path(ruta) / 'config.json').read_text(encoding='utf-8'))
             pso_cfg = cfg.get('pso', {})
             mapping = {
@@ -852,7 +852,7 @@ def refrescar_lista_modelos(window):
     displays = [m['display'] for m in modelos]
 
     # Mantener la selección actual si sigue existiendo
-    actual = ''
+    actual = estado.defaults.get('pso-MODELO_COMBO-', '')
     try:
         actual = window['pso-MODELO_COMBO-'].get()
     except Exception:

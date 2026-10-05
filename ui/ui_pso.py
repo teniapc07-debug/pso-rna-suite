@@ -2,7 +2,7 @@
 import PySimpleGUI as sp
 
 
-def layout_pso(nv, defaults=None, rna_info=None, mostrar_editar_config=False):
+def layout_pso(nv, defaults=None, rna_info=None, mostrar_editar_config=False, modelo_actual=''):
     if defaults is None:
         defaults = {}
     if rna_info is None:
@@ -32,7 +32,7 @@ def layout_pso(nv, defaults=None, rna_info=None, mostrar_editar_config=False):
             readonly=False,
             enable_events=False,
             font=("Arial", 11),
-            default_value='',
+            default_value=modelo_actual,
         ),
          sp.Button('⟳', key='pso-REFRESCAR_LISTA-', size=(4, 1),
                    tooltip='Volver a escanear modelos disponibles'),

@@ -25,7 +25,7 @@ def _build_window():
         'Optimizador PSO',
         layout_pso(
             estado.nv, estado.defaults,
-            rna_info=estado.rna_info_texto, mostrar_editar_config=(estado.ruta_rna is not None),
+            rna_info=estado.rna_info_texto, mostrar_editar_config=(estado.ruta_rna is not None), modelo_actual=estado.modelo_combo_actual
         ),
         key='pso-TAB-', expand_x=True, expand_y=True,
     )
