@@ -35,10 +35,43 @@ pip install PySimpleGUI tensorflow scikit-learn joblib matplotlib pandas numpy
 
 ## Tests
 
-La suite incluye 39 pruebas automáticas con `pytest` que cubren el parser
-de funciones objetivo, la clase `partícula` y el motor del enjambre.
+La suite incluye **52 pruebas automáticas** con `pytest` que cubren el
+parser de funciones objetivo, la clase `partícula`, el motor del enjambre,
+el módulo de logging y el historial de ejecuciones.
 
 ### Instalación de dependencias de desarrollo
 
 ```bash
 pip install -r requirements-dev.txt
+```
+
+### Ejecutar todos los tests
+
+```bash
+pytest
+```
+
+### Ejecutar solo los tests rápidos
+
+Los tests del enjambre están marcados con `@pytest.mark.slow`. Para
+excluirlos durante el desarrollo:
+
+```bash
+pytest -m "not slow"
+```
+
+### Medir cobertura
+
+```bash
+pytest --cov=PSO_MV --cov=RNA --cov=logica --cov-report=term-missing
+```
+
+### Estructura de `tests/`
+
+| Archivo | Cobertura |
+|---|---|
+| `test_funcion_objetivo.py` | Parser AST, dominios, nodos prohibidos |
+| `test_particula.py` | Inicialización, evaluación, límites |
+| `test_enjambre.py` | Convergencia, parada temprana, historial |
+| `test_logging_config.py` | Configuración, operaciones, GUIHandler |
+| `test_historial.py` | Persistencia, cap de 200, corrupción |
