@@ -83,13 +83,14 @@ PySimpleGUI 4.x por decisión, no por elección futura.
 
 **Impacto**: crítico si se distribuye la suite pública o académicamente.
 
-**Mitigación actual**: el proyecto usa PySimpleGUI 4.x (LGPL). Se documenta
-la restricción en `CONSTRAINTS.md` (sección 6.1).
+**Mitigación actual**: el proyecto usa PySimpleGUI 6.3.0.1 (LGPL3 desde la
+versión 6.0.1). El desarrollo activo de esta rama es limitado.
 
-**Mitigación pendiente**: evaluar la migración a `FreeSimpleGUI`. La API es
-compatible en casi su totalidad; el principal riesgo es que algún widget
-específico tenga diferencias. Se propone hacer la migración en una rama
-`refactor/migracion-freesimplegui` antes de la primera distribución pública.
+**Mitigación pendiente**:
+
+- Evaluar la migración a `FreeSimpleGUI` si el desarrollo de PySimpleGUI
+  se estanca o aparecen problemas de compatibilidad.
+- Fijar la versión en `pyproject.toml` para evitar saltos no controlados.
 
 #### R-02 — Cambios de API en TensorFlow
 
@@ -445,6 +446,32 @@ puede fallar en la del usuario sin cambios aparentes en el código.
 - Reevaluar la migración a `FreeSimpleGUI` (ver R-01), que mantiene
   una sola rama activa y elimina este problema de raíz.
 
+#### R-21 — Reentrenamiento imposible sin los datos originales
+
+**Descripción**: el bloque `origen` del `config.json` guarda la arquitectura
+y los parámetros de entrenamiento, pero **no los datos de entrada**. Si el
+modelo se entrenó con un CSV importado y ese archivo se pierde, el usuario
+puede precargar la arquitectura pero no puede regenerar los datos
+automáticamente.
+
+**Probabilidad**: media. Ocurre cuando se comparten modelos entre máquinas
+o cuando el CSV original se mueve/borra.
+
+**Impacto**: bajo. La arquitectura sí se precarga; el usuario solo debe
+volver a seleccionar el archivo de datos.
+
+**Mitigación actual**:
+
+- El botón "Reentrenar" solo se habilita si el modelo tiene bloque `origen`.
+- Para modelos entrenados con datos importados, se muestra un popup
+  informativo explicando que hay que recargar el archivo de datos.
+
+**Mitigación pendiente**:
+
+- Opcionalmente, guardar una copia reducida del CSV (primeras N filas) en
+  la carpeta de exportación. Descartado por ahora: aumenta el tamaño del
+  modelo y complica la exportación.
+
 ---
 
 ## 4. Matriz resumen
@@ -457,7 +484,7 @@ Vista condensada de los 19 riesgos. La columna **Estado** indica:
 
 | ID | Categoría | Prob. | Impacto | Estado |
 |---|---|---|---|---|
-| R-01 | Dependencia externa | Alta | Crítico | Sin mitigar |
+| R-01 | Dependencia externa | Media | Medio | Sin mitigar |
 | R-02 | Dependencia externa | Media | Medio | Parcial |
 | R-03 | Dependencia externa | Media | Alto | Parcial |
 | R-04 | Dependencia externa | Alta (terceros) | Alto | Sin mitigar |
@@ -477,6 +504,7 @@ Vista condensada de los 19 riesgos. La columna **Estado** indica:
 | R-18 | Mantenimiento | Media | Medio | Parcial |
 | R-19 | Mantenimiento | Media | Bajo | Parcial |
 | R-20 | Dependencia externa | Alta | Medio | Parcial |
+| R-21 | De uso | Media | Bajo | Parcial |
 
 ---
 
@@ -549,6 +577,8 @@ Reglas para mantener `RISKS.md` útil a lo largo del tiempo:
   en el escáner de modelos (`feature/lista-modelos`).
 - **2026-10-05**: R-20 añadido tras detectar colisión de claves entre
   PySimpleGUI 4.x y 5.x en la máquina secundaria.
+- **2026-10-05**: R-01 reformulada (licencia resuelta con LGPL3, pero
+  desarrollo limitado). R-22 añadida para seguimiento de FreeSimpleGUI.
 
 Sin estas reglas, el documento envejece y pasa a ser una foto del pasado
 en lugar de una guía viva.
