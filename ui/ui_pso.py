@@ -32,22 +32,31 @@ def layout_pso(nv, defaults=None, rna_info=None, mostrar_editar_config=False, mo
             readonly=False,
             enable_events=False,
             font=("Arial", 11),
-            default_value=modelo_actual,
+            default_value='',
         ),
          sp.Button('⟳', key='pso-REFRESCAR_LISTA-', size=(4, 1),
                    tooltip='Volver a escanear modelos disponibles'),
          sp.FolderBrowse('Examinar…', size=(12, 1), key='pso-EXAMINAR-',
                          target='pso-RUTA_RNA-'),
          sp.Input(key='pso-RUTA_RNA-', size=(20, 1), visible=False)],
-        [sp.Button('Cargar modelo RNA', key='pso-CARGAR_RNA-', size=(20, 1)),
-         sp.Button('Quitar modelo',    key='pso-QUITAR_RNA-',  size=(15, 1))],
+
+        # ---- Fila 1 de botones: Cargar | Quitar ----
+        [sp.Button('Cargar modelo RNA', key='pso-CARGAR_RNA-', size=(22, 1)),
+         sp.Button('Quitar modelo',    key='pso-QUITAR_RNA-',  size=(18, 1))],
+
+        # ---- Fila 2 de botones: Editar config | Reentrenar ----
         [sp.Column(
-            [[sp.Button('Editar config PSO del modelo',
-                        key='pso-EDITAR_CONFIG-', size=(28, 1))]],
-            key='pso-PIN_EDITAR-',
-            visible=mostrar_editar_config,
-            pad=(0, 0),
+            [[sp.Button('Editar config PSO', key='pso-EDITAR_CONFIG-',
+                        size=(22, 1))]],
+            key='pso-PIN_EDITAR-', visible=mostrar_editar_config, pad=(0, 0),
+        ),
+         sp.Column(
+            [[sp.Button('Reentrenar con estos datos',
+                        key='pso-REENTRENAR-', size=(22, 1),
+                        tooltip='Cargar parámetros del modelo en el tab RNA')]],
+            key='pso-PIN_REENTRENAR-', visible=False, pad=(0, 0),
         )],
+
         [sp.Multiline(
             size=(60, 3), key='pso-INFO_RNA-', disabled=True,
             autoscroll=True, font=("Arial", 10),
