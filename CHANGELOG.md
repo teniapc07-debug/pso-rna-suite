@@ -17,7 +17,48 @@ y el versionado sigue [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Fixed
 - (aquí van los arreglos de bugs)
+
 ---
+
+## [v0.3.0] - 2026-10-XX
+
+Tercera release. Cierra el ciclo RNA ↔ PSO con reentrenamiento directo
+y migra los formatos de importación/exportación a Excel.
+
+### Added
+
+#### Migración a Excel
+- Módulo `logica/io_tablas.py` con detección automática de formato.
+- Exportación en `.xlsx` por defecto en todos los flujos.
+- Importación acepta `.xlsx` y `.csv` (compatibilidad hacia atrás).
+- Dependencia `openpyxl>=3.1`.
+
+#### Reentrenamiento desde el PSO
+- Bloque `origen` en `config.json` con los metadatos del entrenamiento
+  (modo, función, arquitectura, épocas, batch).
+- Botón "Reentrenar con estos datos" en el tab PSO.
+- Handoff automático al tab RNA con el formulario precargado.
+- Advertencia de conflicto entre la función simbólica actual y la del
+  modelo cargado.
+- Popup informativo si el modelo se entrenó con datos importados.
+
+#### Silenciado de TensorFlow
+- `TF_CPP_MIN_LOG_LEVEL=3`, `TF_ENABLE_ONEDNN_OPTS=0` y
+  `ABSL_LOGGING_VERBOSITY=3` en `app.py`.
+- Elimina los warnings de absl y oneDNN de la consola.
+
+### Changed
+- Botones del panel RNA en layout 2×2: cargar/quitar en fila 1,
+  editar/reentrenar en fila 2.
+- `Hibrido.cargar_funcion_prediccion` devuelve ahora 5 valores
+  (añade `origen`).
+
+### Docs
+- `docs/RISKS.md`: nuevo riesgo R-21.
+- `docs/WORKFLOWS.md`: flujo de reentrenamiento (pendiente de añadir).
+
+### Fixed
+- Sin cambios funcionales.
 
 ## [v0.2.0] - 2026-10-05
 
