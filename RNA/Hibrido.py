@@ -14,13 +14,14 @@ def cargar_funcion_prediccion(carpeta_modelo):
       - modelo.keras
       - scaler_x.save
       - scaler_y.save
-      - config.json  (nv, lim_inf, lim_sup, columnas_x)
+      - config.json  (nv, lim_inf, lim_sup, columnas_x, [origen])
 
     Devuelve:
       funcion_prediccion(x) -> float
-      nv       (int)
-      lim_inf  (list[float])
-      lim_sup  (list[float])
+      nv        (int)
+      lim_inf   (list[float])
+      lim_sup   (list[float])
+      origen    (dict | None)  — metadatos del entrenamiento si existen
     """
     carpeta = Path(carpeta_modelo)
     modelo_path = carpeta / 'modelo.keras'
@@ -42,6 +43,7 @@ def cargar_funcion_prediccion(carpeta_modelo):
     nv = int(config['nv'])
     lim_inf = [float(v) for v in config['lim_inf']]
     lim_sup = [float(v) for v in config['lim_sup']]
+    origen = config.get('origen')
 
     def funcion_prediccion(x):
         x_pr = np.array(x, dtype=float).reshape(1, -1)
@@ -50,4 +52,4 @@ def cargar_funcion_prediccion(carpeta_modelo):
         y_pr = scaler_y.inverse_transform(y_pr_sca)
         return float(y_pr.flatten()[0])
 
-    return funcion_prediccion, nv, lim_inf, lim_sup
+    return funcion_prediccion, nv, lim_inf, lim_sup, origen
