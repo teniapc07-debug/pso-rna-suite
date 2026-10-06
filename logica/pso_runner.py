@@ -17,6 +17,7 @@ from logica import buscador_modelos
 from PSO_MV import Enjambre_M
 from PSO_MV import funcion_objetivo as modulo_funcion_objetivo
 from RNA import Hibrido
+from estado import estado
 
 logger = logging.getLogger(__name__)
 
@@ -81,6 +82,9 @@ def _guardar_defaults(values):
 
 
 def handle(event, values, window):
+    if event == 'pso-REENTRENAR-':
+        return _preparar_reentrenamiento(window)
+    
     if event == 'res-HISTTOGGLE-':
         toggle_historial(window)
         return None
@@ -153,24 +157,14 @@ def handle(event, values, window):
                            'con "Examinar…".')
             return None
         try:
-            f_pred, nv_rna, lim_inf, lim_sup = Hibrido.cargar_funcion_prediccion(ruta)
+            f_pred, nv_rna, lim_inf, lim_sup, origen = \
+                Hibrido.cargar_funcion_prediccion(ruta)
         except Exception as exc:
             sp.popup_error(f'Error al cargar el modelo RNA:\n{exc}')
             return None
 
         logger.info(f"Modelo RNA cargado: {ruta}")
-        
-        ruta = values.get('pso-RUTA_RNA-', '').strip()
-        if not ruta:
-            sp.popup_error('Seleccione la carpeta del modelo RNA.')
-            return None
-        try:
-            f_pred, nv_rna, lim_inf, lim_sup = Hibrido.cargar_funcion_prediccion(ruta)
-        except Exception as exc:
-            sp.popup_error(f'Error al cargar el modelo RNA:\n{exc}')
-            return None
-    
-        logger.info(f"Modelo RNA cargado: {ruta}")
+        estado.modelo_con_origen = origen
 
         estado.funcion_objetivo_rna = f_pred
         estado.ruta_rna = ruta
@@ -195,16 +189,45 @@ def handle(event, values, window):
         except Exception:
             pass
 
+        # --- Advertencia si el modelo tiene función simbólica de origen ---
+        aviso_conflicto = ''
+        if origen and origen.get('modo') == 'sintetico' and origen.get('funcion'):
+            funcion_origen = origen['funcion']
+            funcion_actual = values.get('pso-FUNCION-', '').strip()
+            if funcion_actual and funcion_actual != funcion_origen:
+                # Popup de decisión: reemplazar la función simbólica actual
+                reemplazar = sp.popup_yes_no(
+                    f'Este modelo fue entrenado con la función:\n\n'
+                    f'    {funcion_origen}\n\n'
+                    f'Tu campo "Función objetivo" tiene otra expresión:\n\n'
+                    f'    {funcion_actual}\n\n'
+                    f'¿Reemplazarla por la del modelo?',
+                    title='Conflicto de función objetivo',
+                )
+                if reemplazar == 'Yes':
+                    estado.defaults['pso-FUNCION-'] = funcion_origen
+                    aviso_conflicto = '(función simbólica reemplazada por la del modelo)'
+                else:
+                    aviso_conflicto = '(función simbólica conservada)'
+            elif not funcion_actual:
+                # Rellenar automáticamente sin preguntar
+                estado.defaults['pso-FUNCION-'] = funcion_origen
+
         texto_info = (
             f'Modelo cargado desde: {ruta}\n'
             f'nv={nv_rna}  |  lim_inf={lim_inf}\n'
             f'lim_sup={lim_sup}\n'
-            f'Se usará el modelo RNA como función objetivo.'
+            f'Se usará el modelo RNA como función objetivo. {aviso_conflicto}'
         )
         estado.rna_info_texto = texto_info
         window['pso-INFO_RNA-'].update(texto_info)
+
+        # Mostrar botón "Editar config"
         window['pso-PIN_EDITAR-'].update(visible=True)
-        # Resetear progreso
+
+        # Mostrar botón "Reentrenar" solo si hay origen
+        window['pso-PIN_REENTRENAR-'].update(visible=origen is not None)
+
         window['pso-ESTADO-'].update('Modelo RNA listo. Pulsa "Iniciar PSO".')
         window['pso-PROGRESO-'].update(current_count=0, max=1)
         window['pso-PORCENTAJE-'].update('0%')
@@ -214,10 +237,12 @@ def handle(event, values, window):
     if event == 'pso-QUITAR_RNA-':
         estado.funcion_objetivo_rna = None
         estado.ruta_rna = None
+        estado.modelo_con_origen = None
         texto = 'No hay modelo RNA cargado. Se usará la función simbólica.'
         estado.rna_info_texto = texto
         window['pso-INFO_RNA-'].update(texto)
         window['pso-PIN_EDITAR-'].update(visible=False)
+        window['pso-PIN_REENTRENAR-'].update(visible=False)
         logger.info("Modelo RNA descargado")
         return None
 
@@ -883,3 +908,39 @@ def refrescar_lista_modelos(window):
             'Exporta un modelo desde el tab RNA o usa "Examinar…".'
         )
     return modelos
+
+# ---------------------------------------------------------------
+# Preparar reentrenamiento
+# ---------------------------------------------------------------
+def _preparar_reentrenamiento(window):
+    """Prepara el handoff PSO → RNA.
+
+    Guarda los metadatos del modelo cargado en `estado.rna_presets` y
+    solicita a `app.py` que reconstruya la ventana y cambie al tab RNA.
+    """
+    origen = estado.modelo_con_origen
+    if not origen:
+        sp.popup_error(
+            'Este modelo no tiene metadatos de entrenamiento.\n\n'
+            'No es posible reentrenar automáticamente. Carga el archivo '
+            'de datos y rellena los parámetros manualmente.'
+        )
+        return None
+
+    # Guardar presets a partir de los metadatos del origen
+    estado.rna_presets = {
+        'modo':       origen.get('modo', 'sintetico'),
+        'funcion':    origen.get('funcion'),
+        'nv':         origen.get('nv'),
+        'lim_inf':    origen.get('lim_inf') or [],
+        'lim_sup':    origen.get('lim_sup') or [],
+        'columnas_x': origen.get('columnas_x') or [],
+        'muestras':   origen.get('muestras'),
+        'capas':      origen.get('capas'),
+        'neuronas':   origen.get('neuronas') or [],
+        'activacion': origen.get('activacion'),
+        'epocas':     origen.get('epocas'),
+        'batch':      origen.get('batch'),
+    }
+    logger.info(f"Reentrenamiento preparado (origen={estado.ruta_rna})")
+    return 'IR_A_RNA'
