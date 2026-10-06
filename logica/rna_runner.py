@@ -77,7 +77,7 @@ def _importar_csv(values, window):
     if not archivo:
         return
     try:
-        df = io_tablas.leer_tabla(archivo)  # sin dtype=str: queremos números
+        df = io_tablas.leer_tabla(archivo)
         if df.empty:
             raise ValueError('El archivo está vacío.')
         col_y = values.get('rna-COL_Y-') or df.columns[-1]
@@ -200,6 +200,37 @@ def _generar_rna(values, window):
             estado.rna_X_validacion = X_val
             estado.rna_y_validacion = y_val
             estado.rna_nv = nv
+
+            # --- Capturar metadatos del entrenamiento ---
+            if estado.rna_datos_importados is None:
+                modo = 'sintetico'
+                funcion_origen = values['rna-FUNCION-'].strip()
+                lim_inf_origen = list(estado.rna_lim_inf_global or [])
+                lim_sup_origen = list(estado.rna_lim_sup_global or [])
+                columnas_origen = list(estado.rna_columnas_x_global or [])
+            else:
+                modo = 'importado'
+                funcion_origen = None
+                lim_inf_origen = list(estado.rna_lim_inf_global or [])
+                lim_sup_origen = list(estado.rna_lim_sup_global or [])
+                columnas_origen = list(estado.rna_columnas_x_global or [])
+
+            estado.rna_origen = {
+                'modo':        modo,
+                'funcion':     funcion_origen,
+                'muestras':    int(muestras),
+                'capas':       int(capas),
+                'neuronas':    [int(x) for x in neuronas],
+                'activacion':  activacion,
+                'epocas':      int(epocas),
+                'batch':       int(batch),
+                'nv':          int(nv),
+                'lim_inf':     [float(v) for v in lim_inf_origen],
+                'lim_sup':     [float(v) for v in lim_sup_origen],
+                'columnas_x':  columnas_origen,
+            }
+            logger.info(f"Metadatos de origen capturados (modo={modo})")
+
             window['rna-ESTADO-'].update('Entrenamiento finalizado.')
         except Exception as exc:
             logger.error(f"Error durante el entrenamiento: {exc}")
@@ -269,6 +300,12 @@ def _exportar_modelo(values):
                 'RONDAS': 10, 'TOL': 1e-6, 'RED_W': True, 'P_T': False,
             },
         }
+        origen = getattr(estado, 'rna_origen', None)
+        if origen:
+            cfg['origen'] = origen
+            logger.info("Bloque 'origen' incluido en config.json")
+        else:
+            logger.warning("Sin metadatos de origen: el modelo no podrá reentrenarse")
         with open(c / 'config.json', 'w', encoding='utf-8') as f:
             json.dump(cfg, f, indent=2, ensure_ascii=False)
             estado.ultima_exportacion = str(c)
@@ -277,3 +314,64 @@ def _exportar_modelo(values):
         sg.popup(f'Modelo exportado en:\n{c}')
     except Exception as exc:
         sg.popup_error(f'Error al exportar: {exc}')
+
+
+def aplicar_presets(window):
+    """Rellena el formulario del tab RNA con los presets guardados.
+
+    Llamada por `app.py` tras un 'IR_A_RNA' desde el tab PSO.
+    No consume `estado.rna_presets` (queda disponible por si el
+    usuario quiere volver a aplicarlos).
+    """
+    p = estado.rna_presets
+    if not p:
+        return
+
+    try:
+        # Modo de datos
+        if p.get('modo') == 'importado':
+            window['rna-MODO-IMPORTADO-'].update(value=True)
+            window['rna-FRAME-0-'].update(visible=False)
+            window['rna-FRAME-4-'].update(visible=True)
+            window['rna-IMPORTAR-'].update(visible=True)
+            sg.popup(
+                'Este modelo se entrenó con datos importados.\n\n'
+                'Los parámetros de arquitectura se han precargado. '
+                'Vuelve a cargar el archivo de datos antes de generar la RNA.',
+                title='Reentrenamiento desde modelo importado',
+            )
+        else:
+            window['rna-MODO-SINTETICO-'].update(value=True)
+            window['rna-FRAME-0-'].update(visible=True)
+            window['rna-FRAME-4-'].update(visible=False)
+            window['rna-IMPORTAR-'].update(visible=False)
+
+            # Datos sintéticos
+            funcion = p.get('funcion') or ''
+            window['rna-FUNCION-'].update(value=funcion)
+            window['rna-NV-'].update(value=str(p.get('nv', '')))
+            lim_inf = p.get('lim_inf') or []
+            lim_sup = p.get('lim_sup') or []
+            window['rna-LIM_INF-'].update(
+                value=', '.join(str(v) for v in lim_inf))
+            window['rna-LIM_SUP-'].update(
+                value=', '.join(str(v) for v in lim_sup))
+
+        # Arquitectura (común a ambos modos)
+        window['rna-MUESTRAS-'].update(value=str(p.get('muestras', '')))
+        window['rna-CAPAS-'].update(value=str(p.get('capas', '')))
+        neuronas = p.get('neuronas') or []
+        window['rna-NEURONAS-'].update(
+            value=', '.join(str(n) for n in neuronas))
+        window['rna-ACTIVACION-'].update(value=p.get('activacion', ''))
+        window['rna-EPOCAS-'].update(value=str(p.get('epocas', '')))
+        window['rna-BATCH-'].update(value=str(p.get('batch', '')))
+
+        window['rna-ESTADO-'].update(
+            'Parámetros cargados desde el modelo RNA del tab PSO. '
+            'Revisa y pulsa "Generar RNA".'
+        )
+        logger.info("Presets aplicados en el tab RNA")
+    except Exception as exc:
+        logger.error(f"Error al aplicar presets: {exc}")
+        sg.popup_error(f'Error al aplicar los parámetros:\n{exc}')
