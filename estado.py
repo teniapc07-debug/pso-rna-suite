@@ -1,7 +1,4 @@
 # estado.py
-import PySimpleGUI as sg
-
-
 class OutputGUI:
     """Redirige stdout/stderr a un Multiline de PySimpleGUI."""
     def __init__(self, window, key, stream=None):
@@ -57,16 +54,14 @@ class Estado:
         self.rna_info_texto = 'No hay modelo RNA cargado. Se usará la función simbólica.'
 
         # --- RNA ---
-        self.rna_datos_importados = None
-        self.rna_modelo = None
-        self.rna_escalador_x = None
-        self.rna_escalador_y = None
-        self.rna_X_validacion = None
-        self.rna_y_validacion = None
-        self.rna_nv = None
-        self.rna_lim_inf_global = None
-        self.rna_lim_sup_global = None
-        self.rna_columnas_x_global = None
+        self.rna_datos_importados: dict | None = None
+        self.rna_modelo: object | None = None
+        self.rna_escalador_x: object | None = None
+        self.rna_escalador_y: object | None = None
+        self.rna_nv: int | None = None
+        self.rna_lim_inf_global: list | None = None
+        self.rna_lim_sup_global: list | None = None
+        self.rna_columnas_x_global: list | None = None
 
         # --- Resultados (figura persistente) ---
         self.ultima_figura = None
@@ -77,5 +72,9 @@ class Estado:
         self.modelos_disponibles = []
         self.ultima_exportacion = None
         self.modelo_combo_actual = ''
+
+        # --- Punto 5: reentrenamiento desde PSO ---
+        self.rna_presets: dict | None = None
+        self.modelo_con_origen: dict | None = None
 
 estado = Estado()
