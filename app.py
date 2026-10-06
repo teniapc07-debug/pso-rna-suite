@@ -93,6 +93,22 @@ def main():
             if estado.historial_visible:
                 pso_runner.refrescar_tabla_historial(window)
 
+        elif resultado == 'IR_A_RNA':
+            # Reconstruir la ventana y cambiar al tab RNA
+            window.close()
+            window = _build_window()
+            sys.stdout = OutputGUI(window, 'res-OUTPUT-', sys.__stdout__)
+            sys.stderr = OutputGUI(window, 'res-OUTPUT-', sys.__stderr__)
+            configurar_logging(window, 'res-OUTPUT-')
+            pso_runner.redibujar_resultados(window)
+            if estado.historial_visible:
+                pso_runner.refrescar_tabla_historial(window)
+            try:
+                window['-TABS-'].Widget.select(1)
+            except Exception as exc:
+                print(f"[ERROR] No se pudo cambiar de tab: {exc}")
+            rna_runner.aplicar_presets(window)
+
     window.close()
 
 
