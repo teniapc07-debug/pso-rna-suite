@@ -127,7 +127,7 @@ que aparecen a su derecha:
 
 ```
 app.py       →  ui/, logica/, estado
-ui/          →  PySimpleGUI únicamente
+ui/          →  FreeSimpleGUI únicamente
 logica/      →  PSO_MV/, RNA/, estado
 PSO_MV/      →  numpy, pandas, copy, time   (sin dependencias del proyecto)
 RNA/         →  PSO_MV/funcion_objetivo, tensorflow, joblib, numpy

@@ -83,8 +83,9 @@ PySimpleGUI 4.x por decisión, no por elección futura.
 
 **Impacto**: crítico si se distribuye la suite pública o académicamente.
 
-**Mitigación actual**: el proyecto usa PySimpleGUI 6.3.0.1 (LGPL3 desde la
-versión 6.0.1). El desarrollo activo de esta rama es limitado.
+**Mitigación actual**: el proyecto usa FreeSimpleGUI, fork MIT del
+PySimpleGUI 4.x original. Mantenimiento activo por la comunidad y
+sin restricciones de licencia.
 
 **Mitigación pendiente**:
 
@@ -484,7 +485,7 @@ Vista condensada de los 19 riesgos. La columna **Estado** indica:
 
 | ID | Categoría | Prob. | Impacto | Estado |
 |---|---|---|---|---|
-| R-01 | Dependencia externa | Media | Medio | Sin mitigar |
+| R-01 | Dependencia externa | Baja | Bajo | Mitigado |
 | R-02 | Dependencia externa | Media | Medio | Parcial |
 | R-03 | Dependencia externa | Media | Alto | Parcial |
 | R-04 | Dependencia externa | Alta (terceros) | Alto | Sin mitigar |
@@ -579,6 +580,7 @@ Reglas para mantener `RISKS.md` útil a lo largo del tiempo:
   PySimpleGUI 4.x y 5.x en la máquina secundaria.
 - **2026-10-05**: R-01 reformulada (licencia resuelta con LGPL3, pero
   desarrollo limitado). R-22 añadida para seguimiento de FreeSimpleGUI.
+- **2026-10-06**: R-01 y R-22 mitigados con la migración a FreeSimpleGUI.
 
 Sin estas reglas, el documento envejece y pasa a ser una foto del pasado
 en lugar de una guía viva.
