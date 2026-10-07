@@ -60,21 +60,22 @@ def layout_resultados(historial_visible=False):
 
     frame_hist = sg.Frame(
         'Historial de ejecuciones (doble clic para restaurar parámetros)',
-        [
-            [tabla],
-            [sg.Column([botones_hist], expand_x=True, pad=((0, 0), (10, 6)))],
-        ],
+        [[tabla]],
         font=("Arial", 12, "bold"),
         expand_x=True,
-        pad=((0, 0), (5, 5)),
     )
 
-    contenedor_hist = sg.Column(
-        [[frame_hist]],
-        key='res-HISTCONT-',
-        visible=historial_visible,
-        expand_x=True,
-        pad=((5, 5), (5, 8)),
+    contenedor_hist = sg.pin(
+        sg.Column(
+            [
+                [frame_hist],
+                [sg.Column([botones_hist], expand_x=True, pad=((0, 0), (8, 8)))],
+            ],
+            key='res-HISTCONT-',
+            visible=historial_visible,
+            expand_x=True,
+        ),
+        shrink=True,
     )
 
     return [
