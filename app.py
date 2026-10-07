@@ -54,7 +54,10 @@ def main():
     sys.stderr = OutputGUI(window, 'res-OUTPUT-', sys.__stderr__)
 
     while True:
-        event, values = window.read()
+        result = window.read()
+        if result is None:
+            break
+        event, values = result
 
         if event in (sg.WIN_CLOSED, 'pso-CERRAR-', 'rna-SALIR-'):
             break
