@@ -5,7 +5,7 @@ from estado import estado, OutputGUI
 import json
 import numpy as np
 import pandas as pd
-import PySimpleGUI as sp
+import FreeSimpleGUI as sp
 import matplotlib.pyplot as plt
 import logging
 from logica.logging_config import operacion_log
@@ -310,7 +310,10 @@ def _dialogo_avanzados():
     ]
     w = sp.Window('Controles Avanzados', layout, resizable=True, finalize=True)
     while True:
-        ev, vals = w.read()
+        result = w.read()
+        if result is None:
+                break
+        ev, vals = result
         if ev in (sp.WIN_CLOSED, 'pso-CERRAR_AV-'):
             break
         if ev == 'pso-GUARDAR_AV-':
@@ -676,7 +679,10 @@ def _dialogo_editar_config():
 
     accion = None
     while True:
-        ev, vals = w.read()
+        result = w.read()
+        if result is None:
+                break
+        ev, vals = result
         if ev in (sp.WIN_CLOSED, 'cfg-CANCEL-'):
             break
         if ev == 'cfg-SAVE-':

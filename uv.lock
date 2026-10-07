@@ -193,6 +193,15 @@ wheels = [
 ]
 
 [[package]]
+name = "freesimplegui"
+version = "5.3.0.post1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/1b/bb/e131232aaec4b845dea2a3424bb8b7772fe2d97058ee3c70a0815b0f0d46/freesimplegui-5.3.0.post1.tar.gz", hash = "sha256:cfc5712c6803bdf6f03aaaa18b083a54a1a3f4254221af06bb08faa4a6aa9719", size = 719482, upload-time = "2026-08-27T08:54:18.232Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/8f/8d/6737ebc9117ea57e185e2209874f9a989d564b8aa162469d11bbd6c65031/freesimplegui-5.3.0.post1-py3-none-any.whl", hash = "sha256:e5b3aa005c94237e9d929a3be72c6311a275e03c8a742a1cd3e565c1903d6e65", size = 734147, upload-time = "2026-08-27T08:54:16.552Z" },
+]
+
+[[package]]
 name = "gast"
 version = "0.7.0"
 source = { registry = "https://pypi.org/simple" }
@@ -578,12 +587,12 @@ name = "psov2"
 version = "0.3.0"
 source = { editable = "." }
 dependencies = [
+    { name = "freesimplegui" },
     { name = "joblib" },
     { name = "matplotlib" },
     { name = "numpy" },
     { name = "openpyxl" },
     { name = "pandas" },
-    { name = "pysimplegui" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "scikit-learn" },
@@ -592,12 +601,12 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "freesimplegui", specifier = ">=5.3.0.post1" },
     { name = "joblib", specifier = ">=1.6.0" },
     { name = "matplotlib", specifier = ">=3.11.2" },
     { name = "numpy", specifier = ">=2.5.3" },
     { name = "openpyxl", specifier = ">=3.1.5" },
     { name = "pandas", specifier = ">=3.0.6" },
-    { name = "pysimplegui", specifier = ">=6.3.0.1" },
     { name = "pytest", specifier = ">=9.1.1" },
     { name = "pytest-cov", specifier = ">=7.1.0" },
     { name = "scikit-learn", specifier = ">=1.9.1" },
@@ -620,15 +629,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/e4/11/b213bebff182584360cb8d17c72c1677fec5c5c228de439e63bcf8ab1c8f/pyparsing-3.3.3.tar.gz", hash = "sha256:928ae7e20211f3b6f3915a72f06a0cfd29ab9d24279dd6346b6b1a7146397d36", size = 1050487, upload-time = "2026-09-20T20:59:05.609Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/38/bb/d215ee7c73b61497b28a5503f9f53523f294fcc936762b7caf90e0c1c2b5/pyparsing-3.3.3-py3-none-any.whl", hash = "sha256:ece8c00a69cf01b45d0b1dedabb469c90d8caf996d4fda40f147627a122849a4", size = 126420, upload-time = "2026-09-20T20:59:04.025Z" },
-]
-
-[[package]]
-name = "pysimplegui"
-version = "6.3.0.1"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/99/58/bb2d530bfc597e1a86378b508a96bc57ff588af7b37ebd68fb4eec62a871/pysimplegui-6.3.0.1.tar.gz", hash = "sha256:d711ac856a8c03382ecc13e58468c8d6b02c580881fc4115c770691b0db680ea", size = 498434, upload-time = "2026-08-16T19:09:14.019Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/45/69/dcff3a6f9c8b411b967a56cf34eafac2d50a14d5ea4efa15e2aa774c28cf/pysimplegui-6.3.0.1-py3-none-any.whl", hash = "sha256:937da4ae6dd6a93b8239aefc76f717e1f4861d4fb64cd4e9b3a5df88865520a5", size = 494935, upload-time = "2026-08-16T19:09:12.644Z" },
 ]
 
 [[package]]

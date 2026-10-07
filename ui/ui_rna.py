@@ -1,5 +1,5 @@
 # ui/ui_rna.py
-import PySimpleGUI as sg
+import FreeSimpleGUI as sg
 
 
 def layout_rna():

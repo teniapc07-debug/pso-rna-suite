@@ -1,5 +1,5 @@
 # ui/ui_resultados.py
-import PySimpleGUI as sg
+import FreeSimpleGUI as sg
 
 
 def layout_resultados(historial_visible=False):

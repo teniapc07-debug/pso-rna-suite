@@ -1,5 +1,5 @@
 # ui/ui_pso.py
-import PySimpleGUI as sp
+import FreeSimpleGUI as sp
 
 
 def layout_pso(nv, defaults=None, rna_info=None, mostrar_editar_config=False, modelo_actual='', mostrar_reentrenar=False):

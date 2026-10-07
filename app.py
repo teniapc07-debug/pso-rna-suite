@@ -1,6 +1,6 @@
 # app.py
 import sys
-import PySimpleGUI as sg
+import FreeSimpleGUI as sg
 import os
 os.environ.setdefault('TF_CPP_MIN_LOG_LEVEL', '2')
 from pathlib import Path
