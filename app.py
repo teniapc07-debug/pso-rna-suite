@@ -14,6 +14,7 @@ from ui.ui_rna import layout_rna
 from ui.ui_resultados import layout_resultados
 from logica import pso_runner, rna_runner
 from logica.logging_config import configurar_logging
+from logica import rutas
 
 try:
     import tensorflow  # noqa: F401
@@ -69,6 +70,8 @@ def main():
     window = _build_window()
 
     configurar_logging(window, 'res-OUTPUT-')
+    carpeta_datos = rutas.carpeta_datos()
+    print(f"[INFO] Carpeta de datos: {carpeta_datos}")
     pso_runner.refrescar_lista_modelos(window)
 
     sys.stdout = OutputGUI(window, 'res-OUTPUT-', sys.__stdout__)

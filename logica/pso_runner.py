@@ -12,6 +12,7 @@ from logica.logging_config import operacion_log
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from logica import historial
 from logica import io_tablas
+from logica import rutas
 
 from logica import buscador_modelos
 from PSO_MV import Enjambre_M
@@ -410,8 +411,7 @@ def _exportar_csv_params(values):
     )
     if not archivo:
         return
-    carpeta = Path('resultados_pso')
-    carpeta.mkdir(exist_ok=True)
+    carpeta = rutas.carpeta_resultados_pso()
     destino = Path(archivo)
     if destino.parent == Path('.'):
         destino = carpeta / destino.name
@@ -536,7 +536,7 @@ def _ejecutar_pso(values, window):
                 w_i=w_i, w_f=w_f, reduccion_w=reduccion_w, info=False,
                 parada_temprana=parada_temprana, rondas_parada=rondas_parada,
                 tolerancia=tolerancia,
-                carpeta_salida="resultados_pso",
+                carpeta_salida=str(rutas.carpeta_resultados_pso()),
                 iteracion_callback=_on_iteracion,
             )
         except ValueError as exc:
@@ -594,9 +594,7 @@ def guardar_grafica_png(window):
         sp.popup_error('Todavía no hay gráfica para guardar. Ejecuta primero el PSO con '
                        '"Gráfica de Historial" marcada.')
         return
-    carpeta = Path('resultados_pso')
-    carpeta.mkdir(parents=True, exist_ok=True)
-    ruta = carpeta / 'grafica_enjambre.png'
+    ruta = rutas.archivo_grafica()
     try:
         estado.ultima_figura.savefig(ruta, dpi=150, bbox_inches='tight')
         sp.popup_ok(f'Gráfica guardada en:\n{ruta}')

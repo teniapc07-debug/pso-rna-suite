@@ -14,6 +14,7 @@ from sklearn.preprocessing import StandardScaler
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
 import joblib as jb
+from logica import rutas
 
 from PSO_MV import funcion_objetivo as modulo_funcion_objetivo
 from estado import estado
@@ -280,8 +281,7 @@ def _exportar_modelo(values):
     if not carpeta_elegida:
         return
     try:
-        base = Path('exportaciones')
-        base.mkdir(parents=True, exist_ok=True)
+        base = rutas.carpeta_exportaciones()
         c = base / Path(carpeta_elegida).name
         c.mkdir(parents=True, exist_ok=True)   
         estado.rna_modelo.save(c / 'modelo.keras')

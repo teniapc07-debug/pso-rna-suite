@@ -16,9 +16,10 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-ARCHIVO = Path('resultados_pso') / 'historial_ejecuciones.json'
+from logica.rutas import archivo_historial
 MAX_ENTRADAS = 200
 
+ARCHIVO = None
 
 # ----------------------------------------------------------------------
 # Carga / guardado
@@ -30,10 +31,11 @@ def cargar_historial():
     Si el archivo no existe, devuelve ``[]``.
     Si está corrupto, lo ignora, registra un warning y devuelve ``[]``.
     """
-    if not ARCHIVO.exists():
+    archivo = _resolver_archivo()
+    if not archivo.exists():
         return []
     try:
-        with open(ARCHIVO, encoding='utf-8') as f:
+        with open(archivo, encoding='utf-8') as f:
             datos = json.load(f)
         if not isinstance(datos, list):
             logger.warning("Historial no es una lista. Ignorando contenido.")
@@ -46,9 +48,10 @@ def cargar_historial():
 
 def guardar_historial(entradas):
     """Escribe la lista completa al archivo, creando la carpeta si falta."""
-    ARCHIVO.parent.mkdir(parents=True, exist_ok=True)
+    archivo = _resolver_archivo()
+    archivo.parent.mkdir(parents=True, exist_ok=True)
     try:
-        with open(ARCHIVO, 'w', encoding='utf-8') as f:
+        with open(archivo, 'w', encoding='utf-8') as f:
             json.dump(entradas, f, indent=2, ensure_ascii=False)
     except Exception as exc:
         logger.error(f"No se pudo guardar el historial: {exc}")
@@ -85,3 +88,7 @@ def agregar_entrada(entrada):
 def limpiar_historial():
     """Vacía el historial."""
     guardar_historial([])
+
+def _resolver_archivo():
+    """Devuelve el archivo de historial, respetando el override de tests."""
+    return ARCHIVO if ARCHIVO is not None else archivo_historial()

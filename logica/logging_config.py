@@ -24,8 +24,10 @@ from datetime import datetime
 from pathlib import Path
 
 
-CARPETA_LOGS = Path('resultados_pso') / 'logs'
+from logica.rutas import carpeta_logs
 ARCHIVO_CONFIG = Path('logging_config.json')
+
+CARPETA_LOGS = None
 
 CONFIG_POR_DEFECTO = {
     'nivel_archivo': 'DEBUG',
@@ -170,10 +172,10 @@ def operacion_log(nombre_operacion):
             logger.info("...")
     """
     cfg = _cargar_config()
-    CARPETA_LOGS.mkdir(parents=True, exist_ok=True)
-
+    carpeta = CARPETA_LOGS if CARPETA_LOGS is not None else carpeta_logs()
+    carpeta.mkdir(parents=True, exist_ok=True)
     marca = datetime.now().strftime('%Y%m%d_%H%M%S')
-    archivo = CARPETA_LOGS / f"run_{marca}_{nombre_operacion}.log"
+    archivo = carpeta / f"run_{marca}_{nombre_operacion}.log"
 
     handler = logging.FileHandler(archivo, encoding='utf-8')
     handler.setLevel(_nivel(cfg.get('nivel_archivo'), logging.DEBUG))
