@@ -473,6 +473,29 @@ volver a seleccionar el archivo de datos.
   la carpeta de exportación. Descartado por ahora: aumenta el tamaño del
   modelo y complica la exportación.
 
+#### R-22 — Dependencia de VC++ Redistributable en Windows
+
+**Descripción**: TensorFlow en Windows requiere las librerías del
+Microsoft Visual C++ Redistributable (2015-2022). Si la máquina destino
+no las tiene instaladas, la aplicación falla al arrancar con un error
+`ImportError: Could not find the DLL(s) 'msvcp140.dll'`.
+
+**Probabilidad**: media-alta en máquinas limpias (reinstalaciones de
+Windows, equipos institucionales con imágenes restringidas).
+
+**Impacto**: crítico. La app no arranca en absoluto.
+
+**Mitigación actual**:
+
+- Detección del error al arrancar en `app.py`, con popup informativo y
+  enlace de descarga del redistributable.
+- Requisito documentado en el README, sección "Requisitos del sistema".
+
+**Mitigación pendiente**:
+
+- Considerar incluir el instalador `vc_redist.x64.exe` junto al paquete
+  de distribución (con nota explícita al usuario).
+
 ---
 
 ## 4. Matriz resumen
@@ -506,6 +529,7 @@ Vista condensada de los 19 riesgos. La columna **Estado** indica:
 | R-19 | Mantenimiento | Media | Bajo | Parcial |
 | R-20 | Dependencia externa | Alta | Medio | Parcial |
 | R-21 | De uso | Media | Bajo | Parcial |
+| R-22 | Dependencia externa | Media-alta | Crítico | Parcial |
 
 ---
 
@@ -583,6 +607,9 @@ Reglas para mantener `RISKS.md` útil a lo largo del tiempo:
 - **2026-10-06**: R-01 y R-22 mitigados con la migración a FreeSimpleGUI.
 - **2026-10-07**: R-04 y R-05 mitigados parcialmente con el empaquetado
   PyInstaller (`feature/empaquetado-exe`).
+- **2026-10-07**: R-23 añadido tras detectar el error de VC++ Redist
+  al ejecutar la app en una máquina limpia. Mitigación parcial con
+  detección temprana y documentación.
 
 Sin estas reglas, el documento envejece y pasa a ser una foto del pasado
 en lugar de una guía viva.
