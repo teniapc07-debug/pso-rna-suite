@@ -2,7 +2,7 @@
 import PySimpleGUI as sp
 
 
-def layout_pso(nv, defaults=None, rna_info=None, mostrar_editar_config=False, modelo_actual=''):
+def layout_pso(nv, defaults=None, rna_info=None, mostrar_editar_config=False, modelo_actual='', mostrar_reentrenar=False):
     if defaults is None:
         defaults = {}
     if rna_info is None:
@@ -54,7 +54,7 @@ def layout_pso(nv, defaults=None, rna_info=None, mostrar_editar_config=False, mo
             [[sp.Button('Reentrenar con estos datos',
                         key='pso-REENTRENAR-', size=(22, 1),
                         tooltip='Cargar parámetros del modelo en el tab RNA')]],
-            key='pso-PIN_REENTRENAR-', visible=False, pad=(0, 0),
+            key='pso-PIN_REENTRENAR-', visible=mostrar_reentrenar, pad=(0, 0),
         )],
 
         [sp.Multiline(
