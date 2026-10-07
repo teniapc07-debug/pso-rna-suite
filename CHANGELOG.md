@@ -20,6 +20,19 @@ y el versionado sigue [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
+## [v0.3.1] - 2026-10-06
+
+Migración de PySimpleGUI a FreeSimpleGUI para eliminar el riesgo de
+licencia (R-01) y garantizar mantenimiento activo (R-22).
+
+### Changed
+- Todas las importaciones de `PySimpleGUI` reemplazadas por `FreeSimpleGUI`.
+- `pyproject.toml`: `PySimpleGUI` reemplazado por `FreeSimpleGUI`.
+- Documentación actualizada (RISKS, CONSTRAINTS, ARCHITECTURE).
+
+### Fixed
+- Sin cambios funcionales. La migración es transparente para el usuario.
+
 ## [v0.3.0] - 2026-10-XX
 
 Tercera release. Cierra el ciclo RNA ↔ PSO con reentrenamiento directo
