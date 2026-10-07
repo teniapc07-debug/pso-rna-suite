@@ -1,9 +1,12 @@
 # app.py
 import sys
-import FreeSimpleGUI as sg
 import os
-os.environ.setdefault('TF_CPP_MIN_LOG_LEVEL', '2')
+import tkinter.messagebox as _mb
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
+os.environ['ABSL_LOGGING_VERBOSITY'] = '3'
 from pathlib import Path
+import FreeSimpleGUI as sg
 
 from estado import estado, OutputGUI
 from ui.ui_pso import layout_pso
@@ -11,6 +14,24 @@ from ui.ui_rna import layout_rna
 from ui.ui_resultados import layout_resultados
 from logica import pso_runner, rna_runner
 from logica.logging_config import configurar_logging
+
+try:
+    import tensorflow  # noqa: F401
+except ImportError as _exc:
+    _msg = str(_exc)
+    if 'msvcp140' in _msg or 'DLL' in _msg or 'vcruntime' in _msg:
+        _mb.showerror(
+            "Componente del sistema faltante",
+            "Falta el Microsoft Visual C++ Redistributable.\n\n"
+            "TensorFlow lo necesita para funcionar.\n\n"
+            "Descárgalo e instálalo desde:\n"
+            "https://aka.ms/vc14/vc_redist.x64.exe\n\n"
+            "Después de instalarlo, reinicia la aplicación."
+        )
+        sys.exit(1)
+    else:
+        # Otro error de import distinto: relanzarlo
+        raise
 
 
 sg.theme('DarkGrey5')
