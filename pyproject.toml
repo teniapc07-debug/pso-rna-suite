@@ -37,3 +37,8 @@ markers = [
     "slow: tests que tardan más de 2 segundos (por ejemplo, entrenamiento o PSO completo)",
     "integration: tests que cruzan varias capas del proyecto",
 ]
+
+[dependency-groups]
+dev = [
+    "pyinstaller>=6.22.3",
+]
