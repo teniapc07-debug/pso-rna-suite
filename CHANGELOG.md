@@ -20,6 +20,35 @@ y el versionado sigue [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
+## [v0.4.0] - 2026-10-07
+
+Cuarta release. Añade la posibilidad de empaquetar la suite como
+aplicación de escritorio autónoma, sin necesidad de Python instalado
+en la máquina destino.
+
+### Added
+
+#### Empaquetado
+- Configuración `psov2.spec` de PyInstaller con:
+  - Hidden imports de TensorFlow y Keras.
+  - Recolección automática de archivos de datos (`collect_data_files`).
+  - Exclusión de backends de GUI no usados (PyQt, PySide, Jupyter).
+- Modo `--onedir` para arranque rápido y compatibilidad con TensorFlow.
+- Documentación de compilación en el README.
+
+### Changed
+- `ui/ui_resultados.py`: el panel del historial se colapsa
+  completamente al ocultarse, reajustando el layout sin dejar hueco
+  (`sg.pin` con `shrink=True`).
+
+### Fixed
+- Corregido el reacomodo del layout al alternar la visibilidad del
+  historial.
+
+### Docs
+- `docs/RISKS.md`: R-04 y R-05 pasan a mitigados parcialmente.
+- `README.md`: nueva sección "Compilación del ejecutable".
+
 ## [v0.3.1] - 2026-10-06
 
 Migración de PySimpleGUI a FreeSimpleGUI para eliminar el riesgo de

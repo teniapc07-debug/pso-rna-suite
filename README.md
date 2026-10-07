@@ -39,6 +39,41 @@ La suite incluye **52 pruebas automáticas** con `pytest` que cubren el
 parser de funciones objetivo, la clase `partícula`, el motor del enjambre,
 el módulo de logging y el historial de ejecuciones.
 
+## Compilación del ejecutable
+
+El proyecto se puede empaquetar como aplicación de escritorio autónoma
+con PyInstaller.
+
+### Requisitos
+
+- PyInstaller instalado (`uv sync --all-extras`).
+- ~2 GB de espacio libre en disco para la build.
+
+### Compilar
+
+```bash
+uv run pyinstaller psov2.spec --clean --noconfirm
+```
+
+El resultado se genera en `dist/psov2/`. La carpeta completa pesa
+aproximadamente **1.3 GB** (TensorFlow incluido) y puede comprimirse
+en ZIP para su distribución.
+
+### Probar en limpio
+
+Copia `dist/psov2/` a otra ubicación (por ejemplo, el Escritorio) y
+ejecuta `psov2.exe` desde allí. La primera ejecución crea las carpetas
+`resultados_pso/` y `exportaciones/` **junto al ejecutable**, no dentro
+del bundle.
+
+### Notas
+
+- El `.spec` incluye los hidden imports necesarios para TensorFlow y
+  Keras. Si actualizas TensorFlow a una versión mayor, puede que haya
+  que añadir más módulos a `hiddenimports`.
+- Para reducir tamaño, considera dividir la suite en dos ejecutables
+  (uno ligero sin TensorFlow, otro pesado).
+
 ### Instalación de dependencias de desarrollo
 
 ```bash

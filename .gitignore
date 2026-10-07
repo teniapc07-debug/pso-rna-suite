@@ -32,3 +32,8 @@ Historial_Enjambre.csv
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# ---------- PyInstaller ----------
+build/
+dist/
+*.spec.bak

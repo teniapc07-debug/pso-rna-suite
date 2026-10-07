@@ -141,11 +141,11 @@ distribuye a entornos Linux sin escritorio.
 **Impacto**: alto. La aplicación arranca pero falla al primer intento de
 dibujar la gráfica.
 
-**Mitigación actual**: el riesgo se ha detectado pero no se ha mitigado.
+**Mitigación actual**: PyInstaller empaqueta los binarios de Tcl/Tk en
+el bundle. Verificado en carpeta limpia sin Python instalado.
 
-**Mitigación pendiente**: al iniciar, verificar la disponibilidad del
-backend y mostrar un mensaje claro si falta. Documentar el requisito Tcl/Tk
-en el `README`.
+**Mitigación pendiente**: ninguna. Riesgo controlado.
+
 
 #### R-05 — Tamaño del ejecutable por TensorFlow
 
@@ -157,13 +157,13 @@ modestas.
 
 **Impacto**: medio. No impide el uso, pero complica la distribución.
 
-**Mitigación actual**: no hay empaquetado aún.
+**Mitigación actual**: se usa PyInstaller en modo `--onedir` con
+`excludes` explícitos para backends de GUI no usados (PyQt, PySide,
+Jupyter). El bundle final pesa ~1.3 GB.
 
-**Mitigación pendiente**: evaluar dos estrategias alternativas:
-
-- Empaquetar TensorFlow por separado y descargarlo en la primera ejecución.
-- Dividir la suite en dos ejecutables: `PSO.exe` (ligero) y
-  `RNA.exe` (pesado).
+**Mitigación pendiente**: si el tamaño resulta prohibitivo para
+distribución, evaluar dividir la suite en dos ejecutables (uno ligero
+con solo el PSO, otro con el motor RNA).
 
 ### 3.2 Riesgos técnicos internos
 
@@ -488,8 +488,8 @@ Vista condensada de los 19 riesgos. La columna **Estado** indica:
 | R-01 | Dependencia externa | Baja | Bajo | Mitigado |
 | R-02 | Dependencia externa | Media | Medio | Parcial |
 | R-03 | Dependencia externa | Media | Alto | Parcial |
-| R-04 | Dependencia externa | Alta (terceros) | Alto | Sin mitigar |
-| R-05 | Dependencia externa | Alta | Medio | Sin mitigar |
+| R-04 | Dependencia externa | Baja | Medio | Mitigado |
+| R-05 | Dependencia externa | Media | Medio | Parcial |
 | R-06 | Técnico interno | Media | Medio | Parcial |
 | R-07 | Técnico interno | Alta | Bajo | Sin mitigar |
 | R-08 | Técnico interno | Baja | Bajo | Parcial |
@@ -581,6 +581,8 @@ Reglas para mantener `RISKS.md` útil a lo largo del tiempo:
 - **2026-10-05**: R-01 reformulada (licencia resuelta con LGPL3, pero
   desarrollo limitado). R-22 añadida para seguimiento de FreeSimpleGUI.
 - **2026-10-06**: R-01 y R-22 mitigados con la migración a FreeSimpleGUI.
+- **2026-10-07**: R-04 y R-05 mitigados parcialmente con el empaquetado
+  PyInstaller (`feature/empaquetado-exe`).
 
 Sin estas reglas, el documento envejece y pasa a ser una foto del pasado
 en lugar de una guía viva.
