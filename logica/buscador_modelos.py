@@ -12,11 +12,12 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
+from logica import rutas
 
 
 logger = logging.getLogger(__name__)
 
-PROFUNDIDAD_MAXIMA = 4
+PROFUNDIDAD_MAXIMA = 5
 
 CARPETAS_IGNORADAS = {
     '.git', '.venv', 'venv', '__pycache__', '.pytest_cache',
@@ -101,7 +102,7 @@ def buscar_modelos_disponibles(raiz=None):
     Ordenados por ``mtime`` descendente.
     """
     if raiz is None:
-        raiz = Path.cwd()
+        raiz = rutas.carpeta_datos()
     else:
         raiz = Path(raiz).resolve()
 
