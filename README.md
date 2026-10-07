@@ -13,15 +13,33 @@ y usarla inmediatamente como función objetivo del PSO** sin reiniciar la app.
 
 ---
 
-## 1. Requisitos
+## Requisitos del sistema
 
-- Python 3.10 o superior
-- Sistema operativo: Windows / Linux / macOS (con backend Tk para Matplotlib)
+### Software obligatorio
+
+- **Windows 10 o superior** (64 bits) o Linux/macOS con Tcl/Tk.
+- **Python 3.13** (o 3.12) si ejecutas desde código fuente.
+- **Microsoft Visual C++ Redistributable 2015-2022 (x64)**.
+
+  TensorFlow en Windows depende de `msvcp140.dll` y `vcruntime140.dll`,
+  que no vienen preinstaladas en muchas imágenes de Windows. Sin ellas,
+  la aplicación falla al arrancar con un error del tipo:
+
+
+**Instalación** (una sola vez por máquina):
+
+- Descarga: <https://aka.ms/vc14/vc_redist.x64.exe>
+- Ejecuta el instalador y reinicia el sistema.
+
+O con `winget` desde PowerShell:
+
+```powershell
+winget install --id Microsoft.VCRedist.2015+.x64 -e
 
 ### Dependencias
 
 ```bash
-pip install PySimpleGUI tensorflow scikit-learn joblib matplotlib pandas numpy
+pip install FreeSimpleGUI tensorflow scikit-learn joblib matplotlib pandas numpy
 
 ## Documentación
 
