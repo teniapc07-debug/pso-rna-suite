@@ -95,7 +95,7 @@ def test_aplicar_presets_sintetico():
 
 def test_aplicar_presets_importado(monkeypatch):
     # Silenciar el popup informativo
-    import PySimpleGUI as sg
+    import FreeSimpleGUI as sg
     monkeypatch.setattr(sg, 'popup', lambda *a, **k: None)
 
     estado.rna_presets = {
