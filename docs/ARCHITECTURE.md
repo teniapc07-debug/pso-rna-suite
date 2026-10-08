@@ -119,6 +119,7 @@ Los handlers devuelven uno de estos valores, que `app.py` interpreta:
 | `PSO_MV/Particula_M.py` | Partícula individual: posición, velocidad, mejor local | clase `particula` |
 | `PSO_MV/funcion_objetivo.py` | Parser seguro (`ast`) de expresiones matemáticas | `crear_funcion_objetivo()` |
 | `RNA/Hibrido.py` | Carga un modelo RNA exportado y devuelve una `callable` apta para el PSO | `cargar_funcion_prediccion()` |
+ `logica/rutas.py` | Centraliza rutas de datos (cwd o home según modo) | carpeta_datos(), carpeta_resultados_pso(), carpeta_exportaciones(), archivo_historial() |
 
 ### 3.2 Reglas de dependencia
 
@@ -206,6 +207,8 @@ docs/            Documentación estructural
 tests/           Pruebas automáticas (pendiente)
 resultados_pso/  Salidas del PSO (ignorada por Git)
 exportaciones/   Modelos RNA exportados (ignorada por Git)
+dist/            Salida del empaquetado PyInstaller (ignorada por Git)
+build/           Archivos temporales de PyInstaller (ignorada por Git)
 ```
 
 ### 5.3 Archivos generados en tiempo de ejecución
