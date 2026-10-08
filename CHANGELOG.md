@@ -22,32 +22,35 @@ y el versionado sigue [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [v0.4.0] - 2026-10-07
 
-Cuarta release. Añade la posibilidad de empaquetar la suite como
-aplicación de escritorio autónoma, sin necesidad de Python instalado
-en la máquina destino.
+Cuarta release. Añade el empaquetado como ejecutable portable para Windows.
 
 ### Added
 
 #### Empaquetado
-- Configuración `psov2.spec` de PyInstaller con:
-  - Hidden imports de TensorFlow y Keras.
-  - Recolección automática de archivos de datos (`collect_data_files`).
-  - Exclusión de backends de GUI no usados (PyQt, PySide, Jupyter).
-- Modo `--onedir` para arranque rápido y compatibilidad con TensorFlow.
-- Documentación de compilación en el README.
+- Configuración `PSO_RNA_Suite.spec` para PyInstaller en modo `--onedir`.
+- Módulo `logica/rutas.py` que centraliza las rutas de datos.
+  - En desarrollo: cwd del proyecto.
+  - En ejecutable: `%USERPROFILE%\PSO_RNA_Suite\`.
+- `docs/PACKAGING.md` con el proceso de generación del ejecutable.
+- Detección de VC++ Redistributable faltante al arrancar (R-23).
 
 ### Changed
-- `ui/ui_resultados.py`: el panel del historial se colapsa
-  completamente al ocultarse, reajustando el layout sin dejar hueco
-  (`sg.pin` con `shrink=True`).
+- El buscador de modelos escanea `carpeta_datos()` en lugar del cwd.
+- Todas las escrituras (`resultados_pso/`, `exportaciones/`, logs,
+  historial) usan `logica/rutas.py`.
+- `app.py` maneja explícitamente el caso de `window.read()` devolviendo
+  `None` (compatibilidad con FreeSimpleGUI).
 
 ### Fixed
-- Corregido el reacomodo del layout al alternar la visibilidad del
-  historial.
+- El botón "Reentrenar" ahora sobrevive a las reconstrucciones de ventana.
+- Código duplicado en el handler de carga de modelo RNA.
 
 ### Docs
-- `docs/RISKS.md`: R-04 y R-05 pasan a mitigados parcialmente.
-- `README.md`: nueva sección "Compilación del ejecutable".
+- `docs/RISKS.md`: nuevo riesgo R-23 (VC++ Redistributable) y R-22
+  (mantenimiento de PySimpleGUI 6.x). R-01 reformulada.
+
+### Removed
+- Ninguno.
 
 ## [v0.3.1] - 2026-10-06
 
