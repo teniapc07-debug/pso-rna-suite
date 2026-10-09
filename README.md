@@ -26,7 +26,20 @@ y usarla inmediatamente como función objetivo del PSO** sin reiniciar la app.
   la aplicación falla al arrancar con un error del tipo:
 
 
-**Instalación** (una sola vez por máquina):
+## Instalación
+
+1. Descarga `PSO_RNA_Suite_Installer.exe` desde la última release en GitHub.
+2. Ejecuta el instalador.
+3. Se crean accesos directos en el menú inicio y (opcionalmente) en el
+   escritorio.
+4. Al primer arranque, la aplicación crea la carpeta de datos
+   `%USERPROFILE%\PSO_RNA_Suite\` donde guardará resultados,
+   exportaciones y logs.
+
+**Requisito**: Microsoft Visual C++ Redistributable 2015-2022 (x64).
+La app detecta si falta y muestra el enlace de descarga.
+
+Requiere Python 3.13 (gestionado por `uv`) y VC++ Redistributable.
 
 - Descarga: <https://aka.ms/vc14/vc_redist.x64.exe>
 - Ejecuta el instalador y reinicia el sistema.
