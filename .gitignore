@@ -37,3 +37,6 @@ desktop.ini
 build/
 dist/
 *.spec.bak
+
+# ---------- Inno Setup ----------
+Output/
