@@ -18,7 +18,7 @@ class enjambre:
         self.particulas = []
         self.mej_posicion = None
         self.mej_valor = None
-        self.mje_part = None
+        self.mej_part = None
 
         self.hist_mej_valor = []
         self.hist_mejor_posicion = []
@@ -47,44 +47,66 @@ class enjambre:
             self.particulas.append(part_i)
     
     def evaluar_enjambre(self,optimizacion,funcion_objetivo,info=False):
-        for i in range(self.n_particulas):
-            self.particulas[i].evaluar_particula(
+        for p in self.particulas:
+            p.evaluar_particula(
                 optimizacion=optimizacion,
                 funcion_objetivo=funcion_objetivo,
                 info=info
             )
-        self.mej_part = copy.deepcopy(self.particulas[0])
-        for i in range(self.n_particulas):
-            if optimizacion == 'Minimización':
-                if self.particulas[i].valor < self.mej_part.valor:
-                    self.mej_part = copy.deepcopy(self.particulas[i])
-            elif optimizacion == 'Maximización':
-                if self.particulas[i].valor > self.mej_part.valor:
-                    self.mej_part = copy.deepcopy(self.particulas[i])
-        self.mej_posicion = copy.deepcopy(self.mej_part.posicion)
-        self.mej_valor = copy.deepcopy(self.mej_part.valor)
+        
+        if optimizacion == 'Minimización':
+            self.mej_part = copy.deepcopy(
+                min(self.particulas, key=lambda p: float(np.asarray(p.mej_valor).squeeze()))
+            )
+        elif optimizacion == 'Maximización':
+            self.mej_part = copy.deepcopy(
+                max(self.particulas, key=lambda p: float(np.asarray(p.mej_valor).squeeze()))
+            )
+        else:
+            raise ValueError("optimizacion debe ser 'Minimización' o 'Maximización'")
 
-    def mover_enjambre(self, w, c1, c2,info):
+        self.mej_posicion = copy.deepcopy(self.mej_part.mej_posicion)
+        self.mej_valor = float(np.asarray(self.mej_part.mej_valor).squeeze())
+
+    def mover_enjambre(self, w, c1, c2, mu=0.5, info=False):
         for i in range(self.n_particulas):
             self.particulas[i].actualizar_componentes(
                 gbest_posicion = self.mej_posicion,
                 w=w,
                 c1=c1,
                 c2=c2,
+                mu=mu,
                 info=info,
             )
 
-    def optimizar(self,funcion_objetivo, optimizacion, n_iteraciones, w=0.9, c1=1.5, c2=1.5, info=False,w_i=0.9,w_f=0.4,reduccion_w=True, rondas_parada=10, parada_temprana=False, tolerancia=1e-6, carpeta_salida="resultados_pso", iteracion_callback=None):
+    def optimizar(self,funcion_objetivo, optimizacion, n_iteraciones, w=0.9, c1=1.5, c2=1.5, mu=0.5, info=False,w_i=0.9,w_f=0.4,reduccion_w=True, rondas_parada=10, parada_temprana=False, tolerancia=1e-6, carpeta_salida="resultados_pso", iteracion_callback=None):
+        if not isinstance(n_iteraciones, (int, np.integer)) or n_iteraciones <= 0:
+            raise ValueError("n_iteraciones debe ser un entero positivo")
+        n_iteraciones = int(n_iteraciones)
+
+        if not isinstance(rondas_parada, (int, np.integer)) or rondas_parada < 1:
+            raise ValueError("rondas_parada debe ser un entero positivo")
+                
         inicio = tm.time()
+        self.hist_mej_valor.clear()
+        self.hist_mejor_posicion.clear()
+        self.diferecia_mejor_valor.clear()
+
+        self.mej_part = None
+        self.mej_posicion = None
+        self.mej_valor = None
+
         for i in range(n_iteraciones):
             if info:
                 logger.info(f"Iteracion: {i+1}/{n_iteraciones}")
                 logger.info("-----------------------------")
+            
             self.evaluar_enjambre(
                 optimizacion=optimizacion,
                 funcion_objetivo=funcion_objetivo,
                 info=info,
             )
+
             self.hist_mej_valor.append(copy.deepcopy(self.mej_valor))
             self.hist_mejor_posicion.append(copy.deepcopy(self.mej_posicion))
 
@@ -92,39 +114,48 @@ class enjambre:
                 try:
                     iteracion_callback(i + 1, n_iteraciones, self.mej_valor)
                 except Exception:
-                    pass
+                    logger.exception("Error en iteracion_callback")
 
             #-------------------------------------------------------------------------------------------
-            if i == 0:
-                self.diferecia_mejor_valor.append(None)
-            else:
+            if i > 0:
                 diferencia = self.hist_mej_valor[i] - self.hist_mej_valor[i - 1]
                 self.diferecia_mejor_valor.append(diferencia)
             
-            if parada_temprana and i > rondas_parada:
-                ultimas_diferencias = np.array(self.diferecia_mejor_valor[-(rondas_parada):])
-                if all(ultimas_diferencias < tolerancia):
-                    logger.info(f"Se ha alcanzado la condición de parada temprana en la iteración {i+1}")
+            if parada_temprana and len(self.diferecia_mejor_valor) >= rondas_parada:
+                ultimas = np.asarray(
+                    self.diferecia_mejor_valor[-rondas_parada:],
+                    dtype=float
+                )
+                if np.all(np.abs(ultimas) < tolerancia):
+                    logger.info(
+                        f"Parada temprana en la iteración {i + 1}"
+                    )
                     break
             #--------------------------------------------------------------------------------------------
 
             if reduccion_w:
-                w = w_i + (( n_iteraciones - (n_iteraciones - i))/n_iteraciones) * (w_f - w_i)
+                if n_iteraciones > 1:
+                    w = w_i + (i / (n_iteraciones - 1)) * (w_f - w_i)
+                else:
+                    w = w_i
 
             self.mover_enjambre(
                 w = w,
                 c1 = c1,
                 c2 = c2,
+                mu = mu,
                 info = False,
             )
-            self.dtframe = pd.DataFrame(
-                {
-                    "Iteracion": np.arange(1, len(self.hist_mej_valor) + 1),
-                    "Mejor_Valor": self.hist_mej_valor,
-                    "Mejor_Posición": self.hist_mejor_posicion,
-                }
-            )
-        
+            
+        self.dtframe = pd.DataFrame(
+            {
+                "Iteracion": np.arange(1, len(self.hist_mej_valor) + 1),
+                "Mejor_Valor": self.hist_mej_valor,
+            }
+        )
+        for j in range(self.n_variables):
+            self.dtframe[f"x{j+1}"] = [pos[j] for pos in self.hist_mejor_posicion]
+
         final = tm.time()
         self.iteracion_optimo = i + 1
         self.tiempo_total = final - inicio
@@ -144,22 +175,3 @@ class enjambre:
         for indice, valor in enumerate(np.asarray(self.posicion_optima).reshape(-1), start=1):
             logger.info(f"  x{indice}: {(valor):.3f}")
         logger.info("-" * 30)
-
-if __name__ == "__main__":
-    test = enjambre(
-        n_particulas=5,
-        n_variables=2,
-        lim_inf=[-10,-5],
-        lim_sup=[30,10],
-        info = False
-    )
-    test.optimizar(
-        n_iteraciones=10,
-        optimizacion='Minimización',
-        funcion_objetivo=lambda x,y: (x**2)+(y**2),
-        w = 0.7,
-        c1 = 1.5,
-        c2 = 2,
-        reduccion_w = True,
-        info = False
-    )
