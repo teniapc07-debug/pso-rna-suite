@@ -11,7 +11,7 @@ class particula:
 
         self.posicion = np.empty(n_variables, dtype=float)
         self.velocidad = np.zeros(n_variables, dtype=float)
-        self.valor = np.empty(1, dtype=float)
+        self.valor = None
 
         self.mej_valor = None
         self.mej_posicion = None
@@ -43,29 +43,38 @@ class particula:
             print("Velocidad: " + str(self.velocidad))
             print("")           
     
+    def _procesar_resultado(self, resultado):   
+        valor = np.asarray(resultado).squeeze()
+        if valor.size != 1:
+            raise ValueError("La función objetivo debe devolver un escalar")
+        return float(valor)
+
     def evaluar_particula(self, optimizacion,funcion_objetivo,info=False):
         if optimizacion not in ['Maximización','Minimización']:
             raise Exception('El argumento optimizacion debe ser: maximizar o minimizar')
-
-        try:
-            self.valor = funcion_objetivo(self.posicion)
-        except TypeError:
-            try:
-                self.valor = funcion_objetivo(*self.posicion)
-            except TypeError:
-                raise TypeError('La función objetivo debe aceptar un array o los valores de cada variable')
         
+        try:
+            self.valor = self._procesar_resultado(funcion_objetivo(self.posicion))
+        except TypeError as e_original:
+            try:
+                self.valor = self._procesar_resultado(funcion_objetivo(*self.posicion))
+            except TypeError:
+                raise TypeError(
+                    f'La función objetivo falló con ambos formatos. '
+                    f'Error original: {e_original}'
+                ) from e_original 
+
         if self.mej_valor is None:
             self.mej_posicion = np.copy(self.posicion)
-            self.mej_valor = np.copy(self.valor)
+            self.mej_valor = float(self.valor)
         else:
             if optimizacion == 'Minimización':
                 if self.valor < self.mej_valor:
-                    self.mej_valor = np.copy(self.valor)
+                    self.mej_valor = float(self.valor)
                     self.mej_posicion = np.copy(self.posicion)
             elif optimizacion == 'Maximización':
                 if self.valor > self.mej_valor:
-                    self.mej_valor = np.copy(self.valor)
+                    self.mej_valor = float(self.valor)
                     self.mej_posicion = np.copy(self.posicion)
 
         if info:
@@ -75,9 +84,12 @@ class particula:
             print("")
 
     
-    def actualizar_componentes(self, gbest_posicion, w=0.9, c1=1.5, c2=1.5, info=False):
-        r1 = np.random.uniform(0,1)
-        r2 = np.random.uniform(0,1)
+    def actualizar_componentes(self, gbest_posicion, w=0.9, c1=1.5, c2=1.5, mu=0.5, info=False):
+        r1 = np.random.uniform(0, 1, self.n_variables)
+        r2 = np.random.uniform(0, 1, self.n_variables)
+
+        if self.mej_posicion is None:
+            raise RuntimeError("La partícula debe evaluarse antes de actualizar componentes")
 
         new_vel = (w * self.velocidad) + (c1 * r1 * (self.mej_posicion - self.posicion)) + (c2 * r2 * (gbest_posicion - self.posicion))
 
@@ -88,10 +100,11 @@ class particula:
         for i in np.arange(len(self.posicion)):
             if self.posicion[i] < self.lim_inf[i]:
                 self.posicion[i] = self.lim_inf[i]
-                self.velocidad[i] = 0
+                 self.velocidad[i] = abs(self.velocidad[i]) * mu
+
             if self.posicion[i] > self.lim_sup[i]:
                 self.posicion[i] = self.lim_sup[i]
-                self.velocidad[i] = 0
+                self.velocidad[i] = -abs(self.velocidad[i]) * mu
 
         if info:
             print("La partícula se ha desplazado")
@@ -99,23 +112,3 @@ class particula:
             print("Nueva posición: " + str(self.posicion))
             print("")
 
-if __name__ == "__main__":
-    example = partícula(
-        n_variables=2,
-        lim_inf=[10,-2],
-        lim_sup=[-7,9],
-        info = False
-    )
-    print(example)
-    def function(x_0,x_1):
-        f = (x_0**2) + (x_1**2)
-        return (f)
-    example.evaluar_particula(
-        funcion_objetivo=function,
-        optimizacion='Minimización',
-        info=True,
-    )
-    example.actualizar_componentes(
-        gbest_posicion=np.array([-100,100]),
-        info=True,
-    )
