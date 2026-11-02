@@ -100,7 +100,7 @@ class particula:
         for i in np.arange(len(self.posicion)):
             if self.posicion[i] < self.lim_inf[i]:
                 self.posicion[i] = self.lim_inf[i]
-                 self.velocidad[i] = abs(self.velocidad[i]) * mu
+                self.velocidad[i] = abs(self.velocidad[i]) * mu
 
             if self.posicion[i] > self.lim_sup[i]:
                 self.posicion[i] = self.lim_sup[i]
