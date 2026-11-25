@@ -12,6 +12,8 @@ from estado import estado, OutputGUI
 from ui.ui_pso import layout_pso
 from ui.ui_rna import layout_rna
 from ui.ui_resultados import layout_resultados
+from ui.ui_masa import crear_layout_masa
+from logica.masa_runner import manejar_eventos_masa
 from logica import pso_runner, rna_runner
 from logica.logging_config import configurar_logging
 from logica import rutas
@@ -39,6 +41,10 @@ sg.theme('DarkGrey5')
 
 
 def _build_window():
+    tab_masa = sg.Tab('Generador MASA (Aumento)', 
+                      crear_layout_masa(), 
+                      key='masa-TAB-', expand_x=True, expand_y=True)
+
     tab_rna = sg.Tab('Constructor RNA',
                      layout_rna(),
                      key='rna-TAB-', expand_x=True, expand_y=True)
@@ -56,7 +62,7 @@ def _build_window():
                      layout_resultados(estado.historial_visible),
                      key='res-TAB-', expand_x=True, expand_y=True)
 
-    tabs = sg.TabGroup([[tab_pso, tab_rna, tab_res]],
+    tabs = sg.TabGroup([[tab_masa, tab_rna, tab_pso, tab_res]],
                        key='-TABS-', enable_events=True,
                        expand_x=True, expand_y=True)
 
@@ -86,10 +92,26 @@ def main():
         if event in (sg.WIN_CLOSED, 'pso-CERRAR-', 'rna-SALIR-'):
             break
 
+        if event.startswith("-MASA_"):
+            manejado = manejar_eventos_masa(event, values, window)
+            if manejado:
+                continue
+
         if event == '-TABS-':
             estado.tab_actual = values['-TABS-']
             # Si el usuario acaba de volver al tab PSO y hay una exportación nueva,
             # refrescar la lista y seleccionar el modelo recién exportado.
+
+            if estado.tab_actual == 'masa-TAB-':
+                # Quizás limpiar el estado visual si es necesario
+                pass
+            
+            if estado.tab_actual == 'rna-TAB-' and getattr(estado, 'hay_dataset_nuevo', False):
+                # Si entramos a RNA y hay un dataset nuevo de MASA, actualizamos la UI
+                # (Necesitarías una función en rna_runner que actualice el combo de datasets)
+                # rna_runner.actualizar_datasets_disponibles(window)
+                estado.hay_dataset_nuevo = False # Consumir la bandera
+                
             if estado.tab_actual == 'pso-TAB-' and estado.ultima_exportacion:
                 pso_runner.refrescar_lista_modelos(window)
                 try:
