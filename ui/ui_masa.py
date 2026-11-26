@@ -31,19 +31,31 @@ def crear_layout_masa():
     frame_config = [
         [sg.Text("Paso 2: Configurar Columnas y Parámetros", font=header_font)],
         [
+            # Columna Izquierda: Variable Objetivo (Y)
             sg.Column([
                 [sg.Text("Variable Objetivo (Y):")],
-                [sg.Combo([], key="-MASA_TARGET_COL-", size=(25, 1), readonly=True)]
+                [sg.Combo([], key="-MASA_TARGET_COL-", size=(20, 1), readonly=True)]
             ], pad=(0, 10)),
             
+            # Columna Derecha: Variables de Entrada (X)
             sg.Column([
-                [sg.Text("Variables de Entrada (X): (Ctrl+Clic para varias)")],
+                [sg.Text("Variables de Entrada (X): (Ctrl+Clic)")],
                 [sg.Listbox(values=[], select_mode=sg.LISTBOX_SELECT_MODE_MULTIPLE, key="-MASA_FEATURE_COLS-", size=(30, 4))]
             ], pad=(0, 10))
         ],
         [sg.HorizontalSeparator(pad=(0, 10))],
+        
+        # Fila para seleccionar el modelo auxiliar y la cantidad de datos
         [
-            sg.Text("Cantidad de datos sintéticos a generar:"),
+            sg.Text("Modelo Auxiliar:"),
+            sg.Combo(
+                ["Gaussiano (GPR)", "Polinomial (Lineal)"], 
+                default_value="Gaussiano (GPR)", 
+                key="-MASA_MODEL_TYPE-", 
+                readonly=True, 
+                size=(20, 1)
+            ),
+            sg.Text("   Cantidad de datos sintéticos:"),
             sg.InputText(default_text="50000", key="-MASA_N_SAMPLES-", size=(10, 1)),
         ]
     ]
@@ -54,11 +66,10 @@ def crear_layout_masa():
             sg.Button("Ejecutar MASA y Generar Dataset", key="-MASA_RUN-", button_color=("white", "#2E8B57"), size=(30, 1)),
             sg.Button("Limpiar", key="-MASA_CLEAR-")
         ],
-        [sg.Text("Estado: Esperando acción...", key="-MASA_STATUS-", text_color="blue", size=(60, 2))]
+        [sg.Text("Estado: Esperando acción...", key="-MASA_STATUS-", text_color="blue", size=(80, 2))]
     ]
 
-    # --- Layout Principal (CORREGIDO AQUÍ) ---
-    # Nota que ahora pasamos 'frame_carga' directamente, sin los corchetes []
+    # --- Layout Principal ---
     layout = [
         [sg.Frame("", frame_carga, expand_x=True, relief=sg.RELIEF_SUNKEN)],
         [sg.Frame("", frame_preview, expand_x=True, relief=sg.RELIEF_SUNKEN)],

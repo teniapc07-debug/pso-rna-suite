@@ -46,11 +46,20 @@ def layout_rna():
                       font='Any 12', expand_x=True)
 
     importacion = [
-        [sg.Text('Columna objetivo (y) en el CSV')],
-        [sg.Combo(values=[], key='rna-COL_Y-', size=(20, 1),
-                  readonly=True, enable_events=True)],
+        [
+            sg.Column([
+                [sg.Text('Variable Objetivo (Y):')],
+                [sg.Combo(values=[], key='rna-COL_Y-', size=(20, 1), readonly=True, enable_events=True)]
+            ], pad=(0, 10)),
+            
+            sg.Column([
+                [sg.Text('Variables de Entrada (X): (Ctrl+Clic)')],
+                [sg.Listbox(values=[], select_mode=sg.LISTBOX_SELECT_MODE_MULTIPLE, key='rna-COL_X-', size=(25, 4))]
+            ], pad=(0, 10))
+        ],
         [sg.Button('Importar Datos', key='rna-IMPORTAR-', size=(15, 1))],
     ]
+
     frame4 = sg.Frame('Datos Importados', importacion, key='rna-FRAME-4-',
                       visible=False, font='Any 12', expand_x=True)
 

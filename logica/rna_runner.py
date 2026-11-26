@@ -81,35 +81,35 @@ def _importar_csv(values, window):
         df = io_tablas.leer_tabla(archivo)
         if df.empty:
             raise ValueError('El archivo está vacío.')
-        col_y = values.get('rna-COL_Y-') or df.columns[-1]
-        if col_y not in df.columns:
-            raise ValueError(f'Columna "{col_y}" no existe.')
-        y = df[col_y].to_numpy(dtype=float)
-        X = df.drop(columns=[col_y]).to_numpy(dtype=float)
-        if X.shape[1] < 1:
-            raise ValueError('Se requiere al menos una columna de entrada.')
-        if np.isnan(X).any() or np.isnan(y).any():
-            raise ValueError('Hay valores faltantes o no numéricos.')
-
-        columnas_x = [c for c in df.columns if c != col_y]
-        estado.rna_datos_importados = {
-            'X': X, 'y': y, 'archivo': archivo, 'columnas_x': columnas_x}
-        estado.rna_nv = X.shape[1]
-
-        window['rna-COL_Y-'].update(values=list(df.columns), value=col_y)
+        
+        # Guardamos el dataframe crudo en el estado para procesarlo luego
+        estado.rna_df_raw = df
+        columnas = list(df.columns)
+        
+        # Autocompletar con valores por defecto lógicos:
+        # Y = última columna, X = todas las demás
+        default_y = columnas[-1]
+        default_x = columnas[:-1]
+        
+        # Actualizar la UI
+        window['rna-COL_Y-'].update(values=columnas, value=default_y)
+        window['rna-COL_X-'].update(values=columnas, set_to_index=[columnas.index(c) for c in default_x])
+        
         window['rna-MODO-IMPORTADO-'].update(value=True)
         window['rna-FRAME-0-'].update(visible=False)
         window['rna-FRAME-4-'].update(visible=True)
         window['rna-ESTADO-'].update(
-            f'Datos: {X.shape[0]} muestras, {X.shape[1]} entradas. '
-            f'Salida "{col_y}".')
+            f'Archivo cargado: {df.shape[0]} muestras, {df.shape[1]} columnas. '
+            f'Seleccione las variables y presione "Generar RNA".')
+            
     except Exception as exc:
-        estado.rna_datos_importados = None
+        estado.rna_df_raw = None
         sg.popup_error(f'Error al importar:\n{exc}')
-        
+
 def _generar_rna(values, window):
     # --- Recolectar entradas de X, y, nv ---
     if not values['rna-MODO-IMPORTADO-']:
+        # ... (tu código actual para modo sintético se queda igual) ...
         try:
             nv = int(values['rna-NV-'])
             lim_inf = [float(x) for x in values['rna-LIM_INF-'].split(',')]
@@ -128,12 +128,42 @@ def _generar_rna(values, window):
             sg.popup_error(f'Error en datos sintéticos: {exc}')
             return
     else:
-        if estado.rna_datos_importados is None:
-            sg.popup_error('Importe un CSV antes de generar la RNA.')
+        # --- NUEVA LÓGICA PARA DATOS IMPORTADOS ---
+        if getattr(estado, 'rna_df_raw', None) is None:
+            sg.popup_error('Importe un archivo CSV antes de generar la RNA.')
             return
-        X = estado.rna_datos_importados['X']
-        y = estado.rna_datos_importados['y']
-        nv = X.shape[1]
+        
+        col_y = values['rna-COL_Y-']
+        col_x = values['rna-COL_X-']
+        
+        if not col_y:
+            sg.popup_error('Debe seleccionar una Variable Objetivo (Y).')
+            return
+        if not col_x:
+            sg.popup_error('Debe seleccionar al menos una Variable de Entrada (X).')
+            return
+        if col_y in col_x:
+            sg.popup_error('La Variable Objetivo (Y) no puede estar en las Entradas (X).')
+            return
+            
+        try:
+            df = estado.rna_df_raw
+            # Extraer y limpiar NaNs
+            df_clean = df.dropna(subset=col_x + [col_y])
+            
+            X = df_clean[col_x].to_numpy(dtype=float)
+            y = df_clean[col_y].to_numpy(dtype=float)
+            nv = X.shape[1]
+            
+            # Guardamos en el estado para que la exportación funcione
+            estado.rna_datos_importados = {
+                'X': X, 'y': y, 'archivo': 'importado', 'columnas_x': col_x
+            }
+            estado.rna_nv = nv
+            
+        except Exception as exc:
+            sg.popup_error(f'Error al procesar las columnas seleccionadas (¿son numéricas?):\n{exc}')
+            return
 
     # --- Entradas de la RNA ---
     try:

@@ -2,9 +2,9 @@ import pandas as pd
 import os
 import FreeSimpleGUI as sg
 from MASA.masa_manager import MASAManager
-from MASA.gpr_surrogate import GPRSurrogate
-from estado import estado # <--- IMPORTACIÓN FALTANTE
-from logica import rutas # <--- IMPORTAMOS RUTAS PARA USAR TU SISTEMA DE CARPETAS
+from MASA.factory import obtener_surrogate
+from estado import estado
+from logica import rutas
 
 def manejar_eventos_masa(event, values, window):
     """
@@ -48,6 +48,7 @@ def manejar_eventos_masa(event, values, window):
         target_col = values["-MASA_TARGET_COL-"]
         feature_cols = values["-MASA_FEATURE_COLS-"]
         n_samples_str = values["-MASA_N_SAMPLES-"]
+        tipo_modelo = values.get("-MASA_MODEL_TYPE-", "Gaussiano (GPR)") # Por si acaso
 
         # --- Validaciones Previas ---
         if not filepath:
@@ -75,18 +76,20 @@ def manejar_eventos_masa(event, values, window):
             return True
 
         # --- Ejecución ---
-        window["-MASA_STATUS-"].update("⏳ Ejecutando MASA... Esto puede tardar unos segundos.", text_color="orange")
+        window["-MASA_STATUS-"].update(f"⏳ Ejecutando MASA con modelo {tipo_modelo}... Esto puede tardar unos segundos.", text_color="orange")
         window.refresh()
 
         try:
-            modelo_auxiliar = GPRSurrogate()
+            # 1. Usar la fábrica para instanciar el modelo elegido por el usuario
+            modelo_auxiliar = obtener_surrogate(tipo_modelo)
+            
+            # 2. Pasarlo al manager
             manager = MASAManager(surrogate_model=modelo_auxiliar)
             
-            # Usamos tu módulo de rutas
+            # 3. Configurar rutas de salida
             try:
                 carpeta_export = rutas.carpeta_datos()
             except AttributeError:
-                # Fallback por si la función se llama distinto en tu rutas.py
                 carpeta_export = "Output" 
                 
             if not os.path.exists(carpeta_export):
@@ -95,6 +98,7 @@ def manejar_eventos_masa(event, values, window):
             nombre_salida = f"Dataset_Aumentado_{os.path.splitext(os.path.basename(filepath))[0]}.csv"
             output_path = os.path.join(carpeta_export, nombre_salida)
 
+            # 4. Ejecutar el pipeline
             resultado = manager.run_augmentation_pipeline(
                 filepath=filepath,
                 feature_cols=feature_cols,
@@ -103,17 +107,19 @@ def manejar_eventos_masa(event, values, window):
                 output_path=output_path
             )
 
-            msj = (f"✅ ¡Éxito! Se generaron {resultado['n_synthetic_samples']} datos.\n"
+            # 5. Actualizar UI con éxito
+            msj = (f"✅ ¡Éxito! Se generaron {resultado['n_synthetic_samples']} datos usando {tipo_modelo}.\n"
                    f"Guardado en: {resultado['output_path']}\n")
             
             window["-MASA_STATUS-"].update(msj, text_color="green")
             
-            # --- AQUÍ ESTABA EL ERROR ---
-            # Ahora guardamos en el estado global usando notación de punto
+            # 6. Guardar en el estado global para la RNA
             estado.ruta_dataset_sintetico = output_path
             estado.hay_dataset_nuevo = True
             
-            sg.popup("MASA finalizado con éxito", "El dataset sintético está listo para ser usado por la RNA.", title="Proceso Completado")
+            sg.popup("MASA finalizado con éxito", 
+                     f"El dataset sintético generado con {tipo_modelo} está listo para la RNA.", 
+                     title="Proceso Completado")
 
         except Exception as e:
             window["-MASA_STATUS-"].update(f"❌ Error en MASA: {str(e)}", text_color="red")
@@ -129,6 +135,9 @@ def manejar_eventos_masa(event, values, window):
         window["-MASA_TARGET_COL-"].update(values=[], value="")
         window["-MASA_FEATURE_COLS-"].update(values=[], set_to_index=[])
         window["-MASA_N_SAMPLES-"].update("50000")
+        # Si tienes el ComboBox del modelo, lo reseteamos aquí también
+        if "-MASA_MODEL_TYPE-" in window.AllKeysDict:
+             window["-MASA_MODEL_TYPE-"].update(value="Gaussiano (GPR)")
         window["-MASA_STATUS-"].update("Estado: Esperando acción...", text_color="blue")
         return True
 
